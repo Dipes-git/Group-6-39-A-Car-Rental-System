@@ -9,7 +9,8 @@ import java.sql.SQLException;
 
 /**
  * Concrete implementation of the UserDao interface.
- * Basic implementation with registration and login operations.
+ * Handles user account operations including role-based registration and login,
+ * using prepared parameterized queries to prevent SQL injection.
  * 
  * @author dipes
  */
@@ -23,26 +24,30 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public boolean registerUser(User user) {
-        String query = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO users (username, email, password, security_question, security_answer, role) VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement stmt = null;
 
         try {
             conn = connector.openConnection();
             if (conn == null) {
+                System.err.println("[UserDaoImpl] Connection failed: openConnection() returned null.");
                 return false;
             }
             stmt = conn.prepareStatement(query);
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
             stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getRole());
+            stmt.setString(4, user.getSecurityQuestion());
+            stmt.setString(5, user.getSecurityAnswer());
+            stmt.setString(6, user.getRole());
 
             int rowsInserted = stmt.executeUpdate();
             return rowsInserted > 0;
 
         } catch (SQLException e) {
-            System.err.println("[UserDaoImpl] Error registering user: " + e.getMessage());
+            System.err.println("[UserDaoImpl] Error occurred while registering user: " + e.getMessage());
+            e.printStackTrace();
             return false;
         } finally {
             closeResources(conn, stmt, null);
@@ -59,6 +64,7 @@ public class UserDaoImpl implements UserDao {
         try {
             conn = connector.openConnection();
             if (conn == null) {
+                System.err.println("[UserDaoImpl] Connection failed: openConnection() returned null.");
                 return null;
             }
             stmt = conn.prepareStatement(query);
@@ -72,12 +78,15 @@ public class UserDaoImpl implements UserDao {
                 user.setUsername(rs.getString("username"));
                 user.setEmail(rs.getString("email"));
                 user.setPassword(rs.getString("password"));
+                user.setSecurityQuestion(rs.getString("security_question"));
+                user.setSecurityAnswer(rs.getString("security_answer"));
                 user.setRole(rs.getString("role"));
                 return user;
             }
 
         } catch (SQLException e) {
-            System.err.println("[UserDaoImpl] Error logging in user: " + e.getMessage());
+            System.err.println("[UserDaoImpl] Error occurred during user login: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             closeResources(conn, stmt, rs);
         }
@@ -94,6 +103,7 @@ public class UserDaoImpl implements UserDao {
         try {
             conn = connector.openConnection();
             if (conn == null) {
+                System.err.println("[UserDaoImpl] Connection failed: openConnection() returned null.");
                 return false;
             }
             stmt = conn.prepareStatement(query);
@@ -103,7 +113,8 @@ public class UserDaoImpl implements UserDao {
             return rs.next();
 
         } catch (SQLException e) {
-            System.err.println("[UserDaoImpl] Error checking user existence: " + e.getMessage());
+            System.err.println("[UserDaoImpl] Error occurred while checking user existence: " + e.getMessage());
+            e.printStackTrace();
             return false;
         } finally {
             closeResources(conn, stmt, rs);
@@ -112,19 +123,78 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public String getSecurityQuestion(String username) {
+        String query = "SELECT security_question FROM users WHERE username = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) {
+                System.err.println("[UserDaoImpl] Connection failed: openConnection() returned null.");
+                return null;
+            }
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("security_question");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Error occurred while retrieving security question: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
         return null;
     }
 
     @Override
     public boolean verifyAnswerAndUpdatePassword(String username, String answer, String newPassword) {
-        return false;
+        // Case-insensitive match on the security answer for a premium user experience
+        String query = "UPDATE users SET password = ? WHERE username = ? AND LOWER(security_answer) = LOWER(?)";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) {
+                System.err.println("[UserDaoImpl] Connection failed: openConnection() returned null.");
+                return false;
+            }
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, newPassword);
+            stmt.setString(2, username);
+            stmt.setString(3, answer);
+
+            int rowsUpdated = stmt.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Error occurred while verifying answer and updating password: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
     }
 
+    /**
+     * Helper method to clean up JDBC resources safely.
+     */
     private void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
         try {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-            if (conn != null) connector.closeConnection(conn);
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                connector.closeConnection(conn);
+            }
         } catch (SQLException e) {
             System.err.println("[UserDaoImpl] Error closing JDBC resources: " + e.getMessage());
         }
