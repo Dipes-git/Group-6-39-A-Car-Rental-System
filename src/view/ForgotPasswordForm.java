@@ -47,7 +47,7 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
 
         leftPanel.setLayout(null);
 
-        carLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/car_banner.png"))); // NOI18N
+        carLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/recover_banner.png"))); // NOI18N
         leftPanel.add(carLabel);
         carLabel.setBounds(0, 0, 400, 600);
 
