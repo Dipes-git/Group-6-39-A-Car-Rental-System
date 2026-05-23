@@ -4,16 +4,16 @@ import model.User;
 
 /**
  * Data Access Object (DAO) interface for User operations.
- * Declares database interaction contracts for authentication, registration, and recovery.
+ * Declares database interaction contracts, now supporting security question recovery flows.
  * 
  * @author dipes
  */
 public interface UserDao {
     
     /**
-     * Registers a new user into the database.
+     * Registers a new user into the database, including their security question details.
      * 
-     * @param user The User entity containing username, email, and password
+     * @param user The User entity containing username, email, password, question, and answer
      * @return true if registration succeeded, false otherwise
      */
     boolean registerUser(User user);
@@ -29,7 +29,6 @@ public interface UserDao {
     
     /**
      * Checks if a username already exists in the database.
-     * Useful for preventing registration of duplicate accounts.
      * 
      * @param username The username to verify
      * @return true if the username is taken, false otherwise
@@ -37,12 +36,20 @@ public interface UserDao {
     boolean checkUserExists(String username);
     
     /**
-     * Resets/updates a user's password if their recovery credentials match.
+     * Retrieves the security question associated with a specific username.
      * 
-     * @param username The registered username
-     * @param email The registered email
-     * @param newPassword The new password to save
-     * @return true if password reset succeeded, false otherwise
+     * @param username The username of the user
+     * @return The security question string if found, null otherwise
      */
-    boolean updatePassword(String username, String email, String newPassword);
+    String getSecurityQuestion(String username);
+    
+    /**
+     * Verifies the user's security answer. If correct, updates their password to a new one.
+     * 
+     * @param username The username of the user
+     * @param answer The security answer supplied by the user
+     * @param newPassword The new password to save
+     * @return true if verification and password update succeeded, false otherwise
+     */
+    boolean verifyAnswerAndUpdatePassword(String username, String answer, String newPassword);
 }

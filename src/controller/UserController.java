@@ -7,11 +7,10 @@ import view.LoginForm;
 import view.SignupForm;
 import view.ForgotPasswordForm;
 import javax.swing.JOptionPane;
-import java.util.Random;
 
 /**
- * Controller class to manage all User-related actions (Login, Signup, and Password Recovery).
- * Coordinates validation, business rules, and UI transitions.
+ * Controller class to manage all User-related actions (Login, Signup, and Password Recovery),
+ * now featuring active verification via Security Questions.
  * 
  * @author dipes
  */
@@ -40,12 +39,6 @@ public class UserController {
         User user = userDao.loginUser(username, password);
         if (user != null) {
             JOptionPane.showMessageDialog(view, "Login Successful!\nWelcome, " + user.getUsername() + "!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            
-            // 🔥 Future Extension: Redirect to Main Dashboard Form here
-            // MainDashboard dashboard = new MainDashboard();
-            // dashboard.setVisible(true);
-            // view.dispose();
-            
             return true;
         } else {
             JOptionPane.showMessageDialog(view, "Invalid Username or Password.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -61,10 +54,12 @@ public class UserController {
      * @param email The entered email
      * @param password The entered password
      * @param confirmPassword The entered confirmation password
+     * @param securityQuestion The selected security question
+     * @param securityAnswer The entered answer to the security question
      * @return true if registration succeeded, false otherwise
      */
-    public boolean handleSignup(SignupForm view, String username, String email, String password, String confirmPassword) {
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+    public boolean handleSignup(SignupForm view, String username, String email, String password, String confirmPassword, String securityQuestion, String securityAnswer) {
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || securityAnswer.isEmpty()) {
             JOptionPane.showMessageDialog(view, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -80,8 +75,8 @@ public class UserController {
             return false;
         }
 
-        // Package into a clean User model and attempt database registration
-        User user = new User(username, email, password);
+        // Package into User model and register
+        User user = new User(username, email, password, securityQuestion, securityAnswer);
         boolean registered = userDao.registerUser(user);
 
         if (registered) {
@@ -99,41 +94,60 @@ public class UserController {
     }
 
     /**
-     * Handles the password recovery request from the ForgotPasswordForm.
-     * Generates a secure temporary password and saves it to the database.
+     * Handles the request to fetch the security question associated with a username.
      * 
      * @param view The ForgotPasswordForm instance
      * @param username The entered username
-     * @param email The entered email
-     * @return true if recovery succeeded, false otherwise
+     * @return The retrieved question if successful, null otherwise
      */
-    public boolean handlePasswordRecovery(ForgotPasswordForm view, String username, String email) {
-        if (username.isEmpty() || email.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please enter both Username and Email.", "Error", JOptionPane.ERROR_MESSAGE);
+    public String handleGetQuestion(ForgotPasswordForm view, String username) {
+        if (username.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Please enter your Username to retrieve your security question.", "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        String question = userDao.getSecurityQuestion(username);
+        if (question != null) {
+            return question;
+        } else {
+            JOptionPane.showMessageDialog(view, "Username not found. Please verify spelling.", "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    /**
+     * Verifies the answer to the security question and updates the password.
+     * 
+     * @param view The ForgotPasswordForm instance
+     * @param username The entered username
+     * @param answer The entered answer
+     * @param newPassword The entered new password
+     * @param confirmPassword The entered confirmation password
+     * @return true if password reset succeeded, false otherwise
+     */
+    public boolean handleResetPassword(ForgotPasswordForm view, String username, String answer, String newPassword, String confirmPassword) {
+        if (username.isEmpty() || answer.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // Generate a premium secure temporary password (e.g., Reset@48291)
-        Random random = new Random();
-        int digits = 10000 + random.nextInt(90000); // 5-digit random number
-        String tempPassword = "Reset@" + digits;
+        if (!newPassword.equals(confirmPassword)) {
+            JOptionPane.showMessageDialog(view, "New passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
 
-        // Reset the password in the database
-        boolean resetSucceeded = userDao.updatePassword(username, email, tempPassword);
+        boolean resetSucceeded = userDao.verifyAnswerAndUpdatePassword(username, answer, newPassword);
 
         if (resetSucceeded) {
-            String message = "Account verified successfully!\n\n"
-                    + "Your temporary password is:  " + tempPassword + "\n\n"
-                    + "Please use this temporary password to log in and update your security settings.";
-            JOptionPane.showMessageDialog(view, message, "Password Reset Succeeded", JOptionPane.INFORMATION_MESSAGE);
-
+            JOptionPane.showMessageDialog(view, "Password reset successfully!\nYou can now log in with your new password.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            
             // Redirect back to Login
             LoginForm loginForm = new LoginForm();
             loginForm.setVisible(true);
             view.dispose();
             return true;
         } else {
-            JOptionPane.showMessageDialog(view, "Verification failed.\nNo account matches the provided Username and Email.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Incorrect answer to the security question. Reset failed.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
