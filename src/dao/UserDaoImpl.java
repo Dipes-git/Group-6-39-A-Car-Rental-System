@@ -8,9 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Concrete implementation of the UserDao interface supporting security questions.
- * Handles user account operations, using prepared parameterized queries
- * to secure input parsing and prevent SQL injection.
+ * Concrete implementation of the UserDao interface.
+ * Handles user account operations including role-based registration and login,
+ * using prepared parameterized queries to prevent SQL injection.
  * 
  * @author dipes
  */
@@ -24,7 +24,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public boolean registerUser(User user) {
-        String query = "INSERT INTO users (username, email, password, security_question, security_answer) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO users (username, email, password, security_question, security_answer, role) VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -40,6 +40,7 @@ public class UserDaoImpl implements UserDao {
             stmt.setString(3, user.getPassword());
             stmt.setString(4, user.getSecurityQuestion());
             stmt.setString(5, user.getSecurityAnswer());
+            stmt.setString(6, user.getRole());
 
             int rowsInserted = stmt.executeUpdate();
             return rowsInserted > 0;
@@ -79,6 +80,7 @@ public class UserDaoImpl implements UserDao {
                 user.setPassword(rs.getString("password"));
                 user.setSecurityQuestion(rs.getString("security_question"));
                 user.setSecurityAnswer(rs.getString("security_answer"));
+                user.setRole(rs.getString("role"));
                 return user;
             }
 
