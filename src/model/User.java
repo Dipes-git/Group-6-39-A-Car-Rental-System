@@ -3,7 +3,7 @@ package model;
 /**
  * Represents a User in the Car Rental System.
  * This class serves as the Model layer entity matching the 'users' table in the database,
- * now supporting account recovery security questions.
+ * supporting account recovery security questions and role-based access control.
  * 
  * @author dipes
  */
@@ -14,6 +14,7 @@ public class User {
     private String password;
     private String securityQuestion;
     private String securityAnswer;
+    private String role;
 
     /**
      * Default constructor.
@@ -29,13 +30,15 @@ public class User {
      * @param password The user's password hash/text
      * @param securityQuestion The user's selected security question
      * @param securityAnswer The user's security answer
+     * @param role The user's role ("admin" or "user")
      */
-    public User(String username, String email, String password, String securityQuestion, String securityAnswer) {
+    public User(String username, String email, String password, String securityQuestion, String securityAnswer, String role) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.securityQuestion = securityQuestion;
         this.securityAnswer = securityAnswer;
+        this.role = role;
     }
 
     /**
@@ -47,14 +50,16 @@ public class User {
      * @param password The user's password hash/text
      * @param securityQuestion The user's selected security question
      * @param securityAnswer The user's security answer
+     * @param role The user's role ("admin" or "user")
      */
-    public User(int id, String username, String email, String password, String securityQuestion, String securityAnswer) {
+    public User(int id, String username, String email, String password, String securityQuestion, String securityAnswer, String role) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.securityQuestion = securityQuestion;
         this.securityAnswer = securityAnswer;
+        this.role = role;
     }
 
     // Getters and Setters
@@ -105,5 +110,13 @@ public class User {
 
     public void setSecurityAnswer(String securityAnswer) {
         this.securityAnswer = securityAnswer;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
