@@ -230,15 +230,22 @@ public class UserController {
         currentView.dispose();
     }
 
-    // ==================== Logout ====================
-
-    /**
-     * Handles logout from any dashboard. Returns to the Login screen.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     */
     public void handleLogout(JFrame currentView) {
         navigateToLogin(currentView);
+    }
+
+    public void handleAdminTabChanged(AdminDashboard view, String tabName) {
+        view.showPanel(tabName);
+    }
+
+    /**
+     * Handles tab switching inside the User Dashboard.
+     * 
+     * @param view The UserDashboard instance
+     * @param tabName The target tab/panel name to show
+     */
+    public void handleUserTabChanged(UserDashboard view, String tabName) {
+        view.showPanel(tabName);
     }
 
     // ==================== UI Helpers ====================
