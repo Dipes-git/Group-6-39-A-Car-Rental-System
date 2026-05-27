@@ -1,17 +1,24 @@
 package view;
 
+import controller.UserController;
+
 /**
  * Visual Form for User Account Registration.
- * Redesigned to support security question setups and 100% drag-and-drop compliance with NetBeans GUI Builder.
+ * Contains only UI components and delegates all logic to UserController.
+ * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class SignupForm extends javax.swing.JFrame {
 
+    private final UserController controller;
+
     public SignupForm() {
+        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
+        controller.setupSignupPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -31,6 +38,8 @@ public class SignupForm extends javax.swing.JFrame {
         passwordField = new javax.swing.JPasswordField();
         confirmLockIconLabel = new javax.swing.JLabel();
         confirmPasswordField = new javax.swing.JPasswordField();
+        roleLabel = new javax.swing.JLabel();
+        roleComboBox = new javax.swing.JComboBox<>();
         securityQuestionComboBox = new javax.swing.JComboBox<>();
         answerIconLabel = new javax.swing.JLabel();
         securityAnswerTextField = new javax.swing.JTextField();
@@ -42,7 +51,7 @@ public class SignupForm extends javax.swing.JFrame {
         setUndecorated(true);
         getContentPane().setLayout(null);
 
-        mainPanel.setBackground(new java.awt.Color(30, 30, 30));
+        mainPanel.setBackground(new java.awt.Color(48, 48, 48));
         mainPanel.setLayout(null);
 
         leftPanel.setLayout(null);
@@ -54,76 +63,77 @@ public class SignupForm extends javax.swing.JFrame {
         mainPanel.add(leftPanel);
         leftPanel.setBounds(0, 0, 400, 600);
 
-        rightPanel.setBackground(new java.awt.Color(255, 255, 255));
         rightPanel.setLayout(null);
 
         signUpTitleLabel.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        signUpTitleLabel.setForeground(new java.awt.Color(30, 30, 30));
+        signUpTitleLabel.setForeground(new java.awt.Color(48, 48, 48));
         signUpTitleLabel.setText("Sign Up");
         rightPanel.add(signUpTitleLabel);
-        signUpTitleLabel.setBounds(40, 35, 200, 45);
+        signUpTitleLabel.setBounds(40, 20, 200, 40);
 
-        underlinePanel.setBackground(new java.awt.Color(237, 40, 54));
         underlinePanel.setLayout(null);
         rightPanel.add(underlinePanel);
-        underlinePanel.setBounds(40, 82, 100, 4);
+        underlinePanel.setBounds(40, 62, 100, 4);
 
         userIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/user_icon.png"))); // NOI18N
         rightPanel.add(userIconLabel);
-        userIconLabel.setBounds(40, 100, 40, 35);
+        userIconLabel.setBounds(40, 78, 40, 32);
 
         userTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        userTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        userTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(userTextField);
-        userTextField.setBounds(90, 100, 270, 35);
+        userTextField.setBounds(90, 78, 270, 32);
 
         emailIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/email_icon.png"))); // NOI18N
         rightPanel.add(emailIconLabel);
-        emailIconLabel.setBounds(40, 150, 40, 35);
+        emailIconLabel.setBounds(40, 120, 40, 32);
 
         emailTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        emailTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        emailTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(emailTextField);
-        emailTextField.setBounds(90, 150, 270, 35);
+        emailTextField.setBounds(90, 120, 270, 32);
 
         lockIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/lock_icon.png"))); // NOI18N
         rightPanel.add(lockIconLabel);
-        lockIconLabel.setBounds(40, 200, 40, 35);
+        lockIconLabel.setBounds(40, 162, 40, 32);
 
         passwordField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        passwordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        passwordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(passwordField);
-        passwordField.setBounds(90, 200, 270, 35);
+        passwordField.setBounds(90, 162, 270, 32);
 
         confirmLockIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/lock_icon.png"))); // NOI18N
         rightPanel.add(confirmLockIconLabel);
-        confirmLockIconLabel.setBounds(40, 250, 40, 35);
+        confirmLockIconLabel.setBounds(40, 204, 40, 32);
 
         confirmPasswordField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        confirmPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        confirmPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(confirmPasswordField);
-        confirmPasswordField.setBounds(90, 250, 270, 35);
+        confirmPasswordField.setBounds(90, 204, 270, 32);
 
-        securityQuestionComboBox.setFont(new java.awt.Font("Segoe UI", 0, 12)); // NOI18N
-        securityQuestionComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {
-            "What is your pet's name?",
-            "What city were you born in?",
-            "What was your first school?",
-            "What is your favorite food?"
-        }));
+        roleLabel.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        roleLabel.setText("Register as:");
+        rightPanel.add(roleLabel);
+        roleLabel.setBounds(40, 250, 80, 30);
+
+        roleComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "User", "Admin" }));
+        roleComboBox.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        rightPanel.add(roleComboBox);
+        roleComboBox.setBounds(125, 250, 235, 30);
+
+        securityQuestionComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "What is your pet's name?", "What city were you born in?", "What is your mother's maiden name?", "What was your first car?" }));
         rightPanel.add(securityQuestionComboBox);
-        securityQuestionComboBox.setBounds(40, 300, 320, 35);
+        securityQuestionComboBox.setBounds(40, 295, 320, 32);
 
         answerIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/user_icon.png"))); // NOI18N
         rightPanel.add(answerIconLabel);
-        answerIconLabel.setBounds(40, 350, 40, 35);
+        answerIconLabel.setBounds(40, 340, 40, 32);
 
         securityAnswerTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        securityAnswerTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        securityAnswerTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(securityAnswerTextField);
-        securityAnswerTextField.setBounds(90, 350, 270, 35);
+        securityAnswerTextField.setBounds(90, 340, 270, 32);
 
-        showPasswordCheckbox.setBackground(new java.awt.Color(255, 255, 255));
         showPasswordCheckbox.setText("Show Password");
         showPasswordCheckbox.setBorder(null);
         showPasswordCheckbox.addActionListener(new java.awt.event.ActionListener() {
@@ -132,11 +142,10 @@ public class SignupForm extends javax.swing.JFrame {
             }
         });
         rightPanel.add(showPasswordCheckbox);
-        showPasswordCheckbox.setBounds(90, 400, 200, 20);
+        showPasswordCheckbox.setBounds(90, 385, 200, 20);
 
-        registerButton.setBackground(new java.awt.Color(0, 168, 89));
+        registerButton.setBackground(new java.awt.Color(102, 255, 153));
         registerButton.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
-        registerButton.setForeground(new java.awt.Color(255, 255, 255));
         registerButton.setText("Sign Up");
         registerButton.setBorderPainted(false);
         registerButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -147,10 +156,9 @@ public class SignupForm extends javax.swing.JFrame {
             }
         });
         rightPanel.add(registerButton);
-        registerButton.setBounds(40, 440, 320, 45);
+        registerButton.setBounds(40, 420, 320, 42);
 
         loginLabel.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        loginLabel.setForeground(new java.awt.Color(242, 95, 52));
         loginLabel.setText("Already have an account? Login");
         loginLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         loginLabel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -159,7 +167,7 @@ public class SignupForm extends javax.swing.JFrame {
             }
         });
         rightPanel.add(loginLabel);
-        loginLabel.setBounds(40, 505, 250, 20);
+        loginLabel.setBounds(40, 475, 250, 20);
 
         mainPanel.add(rightPanel);
         rightPanel.setBounds(400, 0, 400, 600);
@@ -172,31 +180,100 @@ public class SignupForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void showPasswordCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPasswordCheckboxActionPerformed
-        if (showPasswordCheckbox.isSelected()) {
-            passwordField.setEchoChar((char) 0);
-            confirmPasswordField.setEchoChar((char) 0);
-        } else {
-            passwordField.setEchoChar('*');
-            confirmPasswordField.setEchoChar('*');
-        }
+        controller.toggleSignupPasswordVisibility(this);
     }//GEN-LAST:event_showPasswordCheckboxActionPerformed
 
     private void registerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerButtonActionPerformed
-        String username = userTextField.getText().trim();
-        String email = emailTextField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-        String confirmPassword = new String(confirmPasswordField.getPassword()).trim();
-        String question = (String) securityQuestionComboBox.getSelectedItem();
-        String answer = securityAnswerTextField.getText().trim();
-        
-        new controller.UserController().handleSignup(this, username, email, password, confirmPassword, question, answer);
+        controller.handleSignup(this);
     }//GEN-LAST:event_registerButtonActionPerformed
 
     private void loginLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginLabelMouseClicked
-        LoginForm lForm = new LoginForm();
-        lForm.setVisible(true);
-        this.dispose();
+        controller.navigateToLogin(this);
     }//GEN-LAST:event_loginLabelMouseClicked
+
+    // --- Public Getters (for Controller to read UI data) ---
+
+    public String getUsername() {
+        String text = userTextField.getText().trim();
+        if ("Enter Username".equals(text) && userTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getEmail() {
+        String text = emailTextField.getText().trim();
+        if ("Enter Email".equals(text) && emailTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getPassword() {
+        String text = new String(passwordField.getPassword()).trim();
+        if ("Enter Password".equals(text) && passwordField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getConfirmPassword() {
+        String text = new String(confirmPasswordField.getPassword()).trim();
+        if ("Confirm Password".equals(text) && confirmPasswordField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getSelectedRole() {
+        return ((String) roleComboBox.getSelectedItem()).toLowerCase();
+    }
+
+    public String getSecurityQuestion() {
+        return (String) securityQuestionComboBox.getSelectedItem();
+    }
+
+    public String getSecurityAnswer() {
+        String text = securityAnswerTextField.getText().trim();
+        if ("Enter Security Answer".equals(text) && securityAnswerTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public boolean isShowPasswordSelected() {
+        return showPasswordCheckbox.isSelected();
+    }
+
+    public javax.swing.JTextField getUserTextField() {
+        return userTextField;
+    }
+
+    public javax.swing.JTextField getEmailTextField() {
+        return emailTextField;
+    }
+
+    public javax.swing.JPasswordField getPasswordField() {
+        return passwordField;
+    }
+
+    public javax.swing.JPasswordField getConfirmPasswordField() {
+        return confirmPasswordField;
+    }
+
+    public javax.swing.JTextField getSecurityAnswerTextField() {
+        return securityAnswerTextField;
+    }
+
+    // --- Public Setters (for Controller to update UI) ---
+
+    public void setPasswordEchoChar(char c) {
+        passwordField.setEchoChar(c);
+    }
+
+    public void setConfirmPasswordEchoChar(char c) {
+        confirmPasswordField.setEchoChar(c);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel answerIconLabel;
@@ -212,6 +289,8 @@ public class SignupForm extends javax.swing.JFrame {
     private javax.swing.JPasswordField passwordField;
     private javax.swing.JButton registerButton;
     private javax.swing.JPanel rightPanel;
+    private javax.swing.JComboBox<String> roleComboBox;
+    private javax.swing.JLabel roleLabel;
     private javax.swing.JTextField securityAnswerTextField;
     private javax.swing.JComboBox<String> securityQuestionComboBox;
     private javax.swing.JCheckBox showPasswordCheckbox;
