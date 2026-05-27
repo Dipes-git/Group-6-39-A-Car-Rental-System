@@ -2,12 +2,25 @@
 
 package view;
 
+import controller.UserController;
+
+/**
+ * Visual Form for User Login.
+ * Contains only UI components and delegates all logic to UserController.
+ * No business logic, data extraction, or navigation resides in this class.
+ * 
+ * @author dipes
+ */
 public class LoginForm extends javax.swing.JFrame {
 
+    private final UserController controller;
+
     public LoginForm() {
+        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
+        controller.setupLoginPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -75,6 +88,11 @@ public class LoginForm extends javax.swing.JFrame {
 
         userTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         userTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        userTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                userTextFieldFocusGained(evt);
+            }
+        });
         rightPanel.add(userTextField);
         userTextField.setBounds(90, 220, 270, 40);
 
@@ -97,6 +115,7 @@ public class LoginForm extends javax.swing.JFrame {
         rightPanel.add(showPasswordCheckbox);
         showPasswordCheckbox.setBounds(90, 330, 200, 20);
 
+        loginButton.setBackground(new java.awt.Color(255, 153, 0));
         loginButton.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         loginButton.setText("Login");
         loginButton.setBorderPainted(false);
@@ -143,37 +162,64 @@ public class LoginForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void closeLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeLabelMouseClicked
-        System.exit(0);
+        controller.exitApplication();
     }//GEN-LAST:event_closeLabelMouseClicked
 
     private void showPasswordCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPasswordCheckboxActionPerformed
-        if (showPasswordCheckbox.isSelected()) {
-            passwordField.setEchoChar((char) 0);
-        } else {
-            passwordField.setEchoChar('*');
-        }
+        controller.toggleLoginPasswordVisibility(this);
     }//GEN-LAST:event_showPasswordCheckboxActionPerformed
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        String username = userTextField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-        
-        new controller.UserController().handleLogin(this, username, password);
+        controller.handleLogin(this);
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void forgotPasswordLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_forgotPasswordLabelMouseClicked
-        ForgotPasswordForm fpForm = new ForgotPasswordForm();
-        fpForm.setVisible(true);
-        this.dispose();
+        controller.navigateToForgotPassword(this);
     }//GEN-LAST:event_forgotPasswordLabelMouseClicked
 
     private void signupLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_signupLabelMouseClicked
-        SignupForm sForm = new SignupForm();
-        sForm.setVisible(true);
-        this.dispose();
+        controller.navigateToSignup(this);
     }//GEN-LAST:event_signupLabelMouseClicked
 
+    private void userTextFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_userTextFieldFocusGained
+        // TODO add your handling code here:
+    }//GEN-LAST:event_userTextFieldFocusGained
 
+    // --- Public Getters (for Controller to read UI data) ---
+
+    public String getUsername() {
+        String text = userTextField.getText().trim();
+        if ("Enter Username".equals(text) && userTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getPassword() {
+        String text = new String(passwordField.getPassword()).trim();
+        if ("Enter Password".equals(text) && passwordField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public boolean isShowPasswordSelected() {
+        return showPasswordCheckbox.isSelected();
+    }
+
+    public javax.swing.JTextField getUserTextField() {
+        return userTextField;
+    }
+
+    public javax.swing.JPasswordField getPasswordField() {
+        return passwordField;
+    }
+
+    // --- Public Setters (for Controller to update UI) ---
+
+    public void setPasswordEchoChar(char c) {
+        passwordField.setEchoChar(c);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel carLabel;

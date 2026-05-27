@@ -1,17 +1,24 @@
 package view;
 
+import controller.UserController;
+
 /**
  * Visual Form for Password Recovery utilizing Security Questions.
- * Redesigned for active verification and 100% drag-and-drop compliance with NetBeans GUI Builder.
+ * Contains only UI components and delegates all logic to UserController.
+ * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class ForgotPasswordForm extends javax.swing.JFrame {
 
+    private final UserController controller;
+
     public ForgotPasswordForm() {
+        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
+        controller.setupForgotPasswordPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -42,7 +49,7 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         setUndecorated(true);
         getContentPane().setLayout(null);
 
-        mainPanel.setBackground(new java.awt.Color(30, 30, 30));
+        mainPanel.setBackground(new java.awt.Color(48, 48, 48));
         mainPanel.setLayout(null);
 
         leftPanel.setLayout(null);
@@ -54,11 +61,10 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         mainPanel.add(leftPanel);
         leftPanel.setBounds(0, 0, 400, 600);
 
-        rightPanel.setBackground(new java.awt.Color(255, 255, 255));
+        rightPanel.setBackground(new java.awt.Color(204, 204, 255));
         rightPanel.setLayout(null);
 
         closeLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        closeLabel.setForeground(new java.awt.Color(153, 153, 153));
         closeLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         closeLabel.setText("X");
         closeLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -71,12 +77,11 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         closeLabel.setBounds(360, 10, 30, 30);
 
         recoverTitleLabel.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        recoverTitleLabel.setForeground(new java.awt.Color(30, 30, 30));
+        recoverTitleLabel.setForeground(new java.awt.Color(48, 48, 48));
         recoverTitleLabel.setText("Recover");
         rightPanel.add(recoverTitleLabel);
         recoverTitleLabel.setBounds(40, 50, 200, 50);
 
-        underlinePanel.setBackground(new java.awt.Color(237, 40, 54));
         underlinePanel.setLayout(null);
         rightPanel.add(underlinePanel);
         underlinePanel.setBounds(40, 102, 100, 4);
@@ -86,13 +91,12 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         userIconLabel.setBounds(40, 130, 40, 35);
 
         userTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        userTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        userTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(userTextField);
         userTextField.setBounds(90, 130, 170, 35);
 
-        fetchButton.setBackground(new java.awt.Color(30, 30, 30));
+        fetchButton.setBackground(new java.awt.Color(255, 153, 0));
         fetchButton.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        fetchButton.setForeground(new java.awt.Color(255, 255, 255));
         fetchButton.setText("Fetch Question");
         fetchButton.setBorderPainted(false);
         fetchButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -103,10 +107,9 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
             }
         });
         rightPanel.add(fetchButton);
-        fetchButton.setBounds(270, 130, 90, 35);
+        fetchButton.setBounds(270, 130, 110, 35);
 
         questionLabel.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        questionLabel.setForeground(new java.awt.Color(153, 153, 153));
         questionLabel.setText("Security Question:");
         rightPanel.add(questionLabel);
         questionLabel.setBounds(40, 185, 320, 20);
@@ -122,7 +125,7 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         answerIconLabel.setBounds(40, 255, 40, 35);
 
         securityAnswerTextField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        securityAnswerTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        securityAnswerTextField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(securityAnswerTextField);
         securityAnswerTextField.setBounds(90, 255, 270, 35);
 
@@ -131,7 +134,7 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         newPasswordIconLabel.setBounds(40, 310, 40, 35);
 
         newPasswordField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        newPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        newPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(newPasswordField);
         newPasswordField.setBounds(90, 310, 270, 35);
 
@@ -140,13 +143,11 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         confirmPasswordIconLabel.setBounds(40, 365, 40, 35);
 
         confirmNewPasswordField.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        confirmNewPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
+        confirmNewPasswordField.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         rightPanel.add(confirmNewPasswordField);
         confirmNewPasswordField.setBounds(90, 365, 270, 35);
 
-        resetButton.setBackground(new java.awt.Color(0, 168, 89));
         resetButton.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
-        resetButton.setForeground(new java.awt.Color(255, 255, 255));
         resetButton.setText("Reset Password");
         resetButton.setBorderPainted(false);
         resetButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -160,7 +161,6 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
         resetButton.setBounds(40, 425, 320, 45);
 
         backToLoginLabel.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        backToLoginLabel.setForeground(new java.awt.Color(242, 95, 52));
         backToLoginLabel.setText("Back to Login");
         backToLoginLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         backToLoginLabel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -182,45 +182,89 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void closeLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeLabelMouseClicked
-        System.exit(0);
+        controller.exitApplication();
     }//GEN-LAST:event_closeLabelMouseClicked
 
     private void backToLoginLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_backToLoginLabelMouseClicked
-        LoginForm lForm = new LoginForm();
-        lForm.setVisible(true);
-        this.dispose();
+        controller.navigateToLogin(this);
     }//GEN-LAST:event_backToLoginLabelMouseClicked
 
     private void fetchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fetchButtonActionPerformed
-        String username = userTextField.getText().trim();
-        String question = new controller.UserController().handleGetQuestion(this, username);
-        if (question != null) {
-            questionDisplayLabel.setText(question);
-        } else {
-            questionDisplayLabel.setText("Retrieve your question first.");
-        }
+        controller.handleFetchQuestion(this);
     }//GEN-LAST:event_fetchButtonActionPerformed
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
-        String username = userTextField.getText().trim();
-        String answer = securityAnswerTextField.getText().trim();
-        String newPassword = new String(newPasswordField.getPassword()).trim();
-        String confirmPassword = new String(confirmNewPasswordField.getPassword()).trim();
-        
-        new controller.UserController().handleResetPassword(this, username, answer, newPassword, confirmPassword);
+        controller.handleResetPassword(this);
     }//GEN-LAST:event_resetButtonActionPerformed
+
+    // --- Public Getters (for Controller to read UI data) ---
+
+    public String getUsername() {
+        String text = userTextField.getText().trim();
+        if ("Enter Username".equals(text) && userTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getSecurityAnswer() {
+        String text = securityAnswerTextField.getText().trim();
+        if ("Enter Security Answer".equals(text) && securityAnswerTextField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getNewPassword() {
+        String text = new String(newPasswordField.getPassword()).trim();
+        if ("Enter New Password".equals(text) && newPasswordField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public String getConfirmPassword() {
+        String text = new String(confirmNewPasswordField.getPassword()).trim();
+        if ("Confirm New Password".equals(text) && confirmNewPasswordField.getForeground().equals(java.awt.Color.GRAY)) {
+            return "";
+        }
+        return text;
+    }
+
+    public javax.swing.JTextField getUserTextField() {
+        return userTextField;
+    }
+
+    public javax.swing.JTextField getSecurityAnswerTextField() {
+        return securityAnswerTextField;
+    }
+
+    public javax.swing.JPasswordField getNewPasswordField() {
+        return newPasswordField;
+    }
+
+    public javax.swing.JPasswordField getConfirmNewPasswordField() {
+        return confirmNewPasswordField;
+    }
+
+    // --- Public Setters (for Controller to update UI) ---
+
+    public void setQuestionDisplayText(String text) {
+        questionDisplayLabel.setText(text);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel answerIconLabel;
+    private javax.swing.JLabel backToLoginLabel;
     private javax.swing.JLabel carLabel;
     private javax.swing.JLabel closeLabel;
-    private javax.swing.JLabel confirmPasswordIconLabel;
     private javax.swing.JPasswordField confirmNewPasswordField;
+    private javax.swing.JLabel confirmPasswordIconLabel;
     private javax.swing.JButton fetchButton;
     private javax.swing.JPanel leftPanel;
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JLabel newPasswordIconLabel;
     private javax.swing.JPasswordField newPasswordField;
+    private javax.swing.JLabel newPasswordIconLabel;
     private javax.swing.JLabel questionDisplayLabel;
     private javax.swing.JLabel questionLabel;
     private javax.swing.JLabel recoverTitleLabel;
@@ -230,6 +274,5 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
     private javax.swing.JPanel underlinePanel;
     private javax.swing.JLabel userIconLabel;
     private javax.swing.JTextField userTextField;
-    private javax.swing.JLabel backToLoginLabel;
     // End of variables declaration//GEN-END:variables
 }
