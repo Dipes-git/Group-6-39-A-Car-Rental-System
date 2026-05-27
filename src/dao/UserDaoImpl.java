@@ -3,6 +3,7 @@ package dao;
 import database.MySqlConnector;
 import model.User;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +21,48 @@ public class UserDaoImpl implements UserDao {
 
     public UserDaoImpl() {
         this.connector = new MySqlConnector();
+        initializeDatabaseSchema();
+    }
+
+    /**
+     * Natively checks users table columns and dynamically adds missing role column
+     * at startup to achieve a fully seamless self-healing database configuration.
+     */
+    private void initializeDatabaseSchema() {
+        Connection conn = null;
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                addColumnIfMissing(conn, "role", "VARCHAR(20) NOT NULL DEFAULT 'user'");
+            }
+        } catch (Exception e) {
+            System.err.println("[UserDaoImpl] Self-healing DB check encountered an error: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                try {
+                    connector.closeConnection(conn);
+                } catch (SQLException e) {
+                    System.err.println("[UserDaoImpl] Error closing check connection: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private void addColumnIfMissing(Connection conn, String columnName, String columnDefinition) {
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getColumns(null, null, "users", columnName)) {
+                if (!rs.next()) {
+                    String query = "ALTER TABLE users ADD COLUMN " + columnName + " " + columnDefinition;
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.executeUpdate();
+                        System.out.println("[UserDaoImpl] Successfully added column: " + columnName);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Failed to verify/add column '" + columnName + "': " + e.getMessage());
+        }
     }
 
     @Override
