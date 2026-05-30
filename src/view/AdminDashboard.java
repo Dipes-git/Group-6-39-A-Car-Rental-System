@@ -30,6 +30,7 @@ public class AdminDashboard extends javax.swing.JFrame {
         styleSidebarButton(carsButton);
         styleSidebarButton(locationsButton);
         styleSidebarButton(bookingsButton);
+        styleSidebarButton(customersButton);
         
         setupDashboardPanels();
         
@@ -104,6 +105,7 @@ public class AdminDashboard extends javax.swing.JFrame {
         carsButton = new javax.swing.JButton();
         locationsButton = new javax.swing.JButton();
         bookingsButton = new javax.swing.JButton();
+        customersButton = new javax.swing.JButton();
         contentPanel = new javax.swing.JPanel();
         overviewPanel = new javax.swing.JPanel();
         overviewTitle = new javax.swing.JLabel();
@@ -120,15 +122,13 @@ public class AdminDashboard extends javax.swing.JFrame {
         earningsTitle = new javax.swing.JLabel();
         earningsVal = new javax.swing.JLabel();
         bgLabel = new javax.swing.JLabel();
-        carPanel = new view.CarPanel();
         brandPanel = new view.BrandPanel();
-        locationsPanel = new javax.swing.JPanel();
-        javax.swing.JLabel locationsManageTitle = new javax.swing.JLabel();
-        javax.swing.JLabel locationsManageLabel = new javax.swing.JLabel();
-        locBgLabel = new javax.swing.JLabel();
+        carPanel = new view.CarPanel();
+        customerPanel = new view.CustomerPanel();
+        locationsPanel = new view.LocationPanel();
         bookingsPanel = new javax.swing.JPanel();
-        javax.swing.JLabel bookingsManageTitle = new javax.swing.JLabel();
-        javax.swing.JLabel bookingsManageLabel = new javax.swing.JLabel();
+        bookTitle = new javax.swing.JLabel();
+        bookLabel = new javax.swing.JLabel();
         bookingsBgLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -179,8 +179,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         overviewButton.setForeground(new java.awt.Color(255, 255, 255));
         overviewButton.setText("Overview");
         overviewButton.setBorderPainted(false);
-        overviewButton.setContentAreaFilled(false);
-        overviewButton.setOpaque(true);
         overviewButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         overviewButton.setFocusPainted(false);
         overviewButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -197,8 +195,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         brandsButton.setForeground(new java.awt.Color(255, 255, 255));
         brandsButton.setText("Brands");
         brandsButton.setBorderPainted(false);
-        brandsButton.setContentAreaFilled(false);
-        brandsButton.setOpaque(true);
         brandsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         brandsButton.setFocusPainted(false);
         brandsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -215,8 +211,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         carsButton.setForeground(new java.awt.Color(255, 255, 255));
         carsButton.setText("Cars");
         carsButton.setBorderPainted(false);
-        carsButton.setContentAreaFilled(false);
-        carsButton.setOpaque(true);
         carsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         carsButton.setFocusPainted(false);
         carsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -233,8 +227,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         locationsButton.setForeground(new java.awt.Color(255, 255, 255));
         locationsButton.setText("Locations");
         locationsButton.setBorderPainted(false);
-        locationsButton.setContentAreaFilled(false);
-        locationsButton.setOpaque(true);
         locationsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         locationsButton.setFocusPainted(false);
         locationsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -251,8 +243,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         bookingsButton.setForeground(new java.awt.Color(255, 255, 255));
         bookingsButton.setText("Bookings");
         bookingsButton.setBorderPainted(false);
-        bookingsButton.setContentAreaFilled(false);
-        bookingsButton.setOpaque(true);
         bookingsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         bookingsButton.setFocusPainted(false);
         bookingsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -263,6 +253,22 @@ public class AdminDashboard extends javax.swing.JFrame {
         });
         sidebarPanel.add(bookingsButton);
         bookingsButton.setBounds(10, 290, 180, 45);
+
+        customersButton.setBackground(new java.awt.Color(40, 40, 40));
+        customersButton.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
+        customersButton.setForeground(new java.awt.Color(255, 255, 255));
+        customersButton.setText("Customers");
+        customersButton.setBorderPainted(false);
+        customersButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        customersButton.setFocusPainted(false);
+        customersButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        customersButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                customersButtonActionPerformed(evt);
+            }
+        });
+        sidebarPanel.add(customersButton);
+        customersButton.setBounds(10, 355, 180, 45);
 
         mainPanel.add(sidebarPanel);
         sidebarPanel.setBounds(0, 80, 200, 520);
@@ -281,61 +287,73 @@ public class AdminDashboard extends javax.swing.JFrame {
 
         carsCard.setBackground(new java.awt.Color(0, 102, 153));
         carsCard.setLayout(null);
+
         carsTitle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         carsTitle.setForeground(new java.awt.Color(230, 230, 230));
         carsTitle.setText("Total Cars");
         carsCard.add(carsTitle);
         carsTitle.setBounds(20, 20, 220, 20);
+
         carsVal.setFont(new java.awt.Font("Segoe UI", 1, 28)); // NOI18N
         carsVal.setForeground(new java.awt.Color(255, 255, 255));
         carsVal.setText("12");
         carsCard.add(carsVal);
         carsVal.setBounds(20, 50, 220, 45);
+
         overviewPanel.add(carsCard);
         carsCard.setBounds(30, 80, 260, 130);
 
         activeCard.setBackground(new java.awt.Color(0, 153, 102));
         activeCard.setLayout(null);
+
         activeTitle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         activeTitle.setForeground(new java.awt.Color(230, 230, 230));
         activeTitle.setText("Active Bookings");
         activeCard.add(activeTitle);
         activeTitle.setBounds(20, 20, 220, 20);
+
         activeVal.setFont(new java.awt.Font("Segoe UI", 1, 28)); // NOI18N
         activeVal.setForeground(new java.awt.Color(255, 255, 255));
         activeVal.setText("5");
         activeCard.add(activeVal);
         activeVal.setBounds(20, 50, 220, 45);
+
         overviewPanel.add(activeCard);
         activeCard.setBounds(310, 80, 260, 130);
 
         pendingCard.setBackground(new java.awt.Color(230, 126, 34));
         pendingCard.setLayout(null);
+
         pendingTitle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         pendingTitle.setForeground(new java.awt.Color(230, 230, 230));
         pendingTitle.setText("Pending Requests");
         pendingCard.add(pendingTitle);
         pendingTitle.setBounds(20, 20, 220, 20);
+
         pendingVal.setFont(new java.awt.Font("Segoe UI", 1, 28)); // NOI18N
         pendingVal.setForeground(new java.awt.Color(255, 255, 255));
         pendingVal.setText("3");
         pendingCard.add(pendingVal);
         pendingVal.setBounds(20, 50, 220, 45);
+
         overviewPanel.add(pendingCard);
         pendingCard.setBounds(30, 240, 260, 130);
 
         earningsCard.setBackground(new java.awt.Color(156, 89, 184));
         earningsCard.setLayout(null);
+
         earningsTitle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         earningsTitle.setForeground(new java.awt.Color(230, 230, 230));
         earningsTitle.setText("Total Earnings");
         earningsCard.add(earningsTitle);
         earningsTitle.setBounds(20, 20, 220, 20);
+
         earningsVal.setFont(new java.awt.Font("Segoe UI", 1, 28)); // NOI18N
         earningsVal.setForeground(new java.awt.Color(255, 255, 255));
         earningsVal.setText("$1,450.00");
         earningsCard.add(earningsVal);
         earningsVal.setBounds(20, 50, 220, 45);
+
         overviewPanel.add(earningsCard);
         earningsCard.setBounds(310, 240, 260, 130);
 
@@ -344,39 +362,27 @@ public class AdminDashboard extends javax.swing.JFrame {
         bgLabel.setBounds(0, 0, 600, 520);
 
         contentPanel.add(overviewPanel, "overview");
-        contentPanel.add(carPanel, "cars");
         contentPanel.add(brandPanel, "brands");
-
-        locationsPanel.setBackground(new java.awt.Color(45, 45, 45));
-        locationsPanel.setLayout(null);
-        locationsManageTitle.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        locationsManageTitle.setForeground(new java.awt.Color(255, 255, 255));
-        locationsManageTitle.setText("Manage Locations");
-        locationsPanel.add(locationsManageTitle);
-        locationsManageTitle.setBounds(30, 20, 300, 35);
-        locationsManageLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        locationsManageLabel.setForeground(new java.awt.Color(180, 180, 180));
-        locationsManageLabel.setText("Location/Branch JTable and CRUD operations will go here in Sprint 3.");
-        locationsPanel.add(locationsManageLabel);
-        locationsManageLabel.setBounds(30, 80, 500, 30);
-        locBgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admin_bg.png"))); // NOI18N
-        locationsPanel.add(locBgLabel);
-        locBgLabel.setBounds(0, 0, 600, 520);
+        contentPanel.add(carPanel, "cars");
+        contentPanel.add(customerPanel, "customers");
 
         contentPanel.add(locationsPanel, "locations");
 
         bookingsPanel.setBackground(new java.awt.Color(45, 45, 45));
         bookingsPanel.setLayout(null);
-        bookingsManageTitle.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        bookingsManageTitle.setForeground(new java.awt.Color(255, 255, 255));
-        bookingsManageTitle.setText("Manage Bookings");
-        bookingsPanel.add(bookingsManageTitle);
-        bookingsManageTitle.setBounds(30, 20, 300, 35);
-        bookingsManageLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        bookingsManageLabel.setForeground(new java.awt.Color(180, 180, 180));
-        bookingsManageLabel.setText("Booking approval queue and rental status tables will go here in Sprint 4.");
-        bookingsPanel.add(bookingsManageLabel);
-        bookingsManageLabel.setBounds(30, 80, 500, 30);
+
+        bookTitle.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        bookTitle.setForeground(new java.awt.Color(255, 255, 255));
+        bookTitle.setText("Manage Bookings");
+        bookingsPanel.add(bookTitle);
+        bookTitle.setBounds(30, 20, 300, 35);
+
+        bookLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        bookLabel.setForeground(new java.awt.Color(180, 180, 180));
+        bookLabel.setText("Booking approval queue and rental status tables will go here in Sprint 4.");
+        bookingsPanel.add(bookLabel);
+        bookLabel.setBounds(30, 80, 500, 30);
+
         bookingsBgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admin_bg.png"))); // NOI18N
         bookingsPanel.add(bookingsBgLabel);
         bookingsBgLabel.setBounds(0, 0, 600, 520);
@@ -417,6 +423,10 @@ public class AdminDashboard extends javax.swing.JFrame {
         controller.handleAdminTabChanged(this, "bookings");
     }//GEN-LAST:event_bookingsButtonActionPerformed
 
+    private void customersButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        controller.handleAdminTabChanged(this, "customers");
+    }
+
     public void setWelcomeText(String text) {
         welcomeLabel.setText(text);
     }
@@ -430,6 +440,7 @@ public class AdminDashboard extends javax.swing.JFrame {
         carsButton.setBackground(name.equals("cars") ? new java.awt.Color(60, 60, 60) : new java.awt.Color(40, 40, 40));
         locationsButton.setBackground(name.equals("locations") ? new java.awt.Color(60, 60, 60) : new java.awt.Color(40, 40, 40));
         bookingsButton.setBackground(name.equals("bookings") ? new java.awt.Color(60, 60, 60) : new java.awt.Color(40, 40, 40));
+        customersButton.setBackground(name.equals("customers") ? new java.awt.Color(60, 60, 60) : new java.awt.Color(40, 40, 40));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -437,21 +448,27 @@ public class AdminDashboard extends javax.swing.JFrame {
     private javax.swing.JLabel activeTitle;
     private javax.swing.JLabel activeVal;
     private javax.swing.JLabel bgLabel;
-    private javax.swing.JButton bookingsButton;
+    private javax.swing.JLabel bookLabel;
+    private javax.swing.JLabel bookTitle;
     private javax.swing.JLabel bookingsBgLabel;
+    private javax.swing.JButton bookingsButton;
     private javax.swing.JPanel bookingsPanel;
+    private view.BrandPanel brandPanel;
+    private view.CarPanel carPanel;
+    private view.CustomerPanel customerPanel;
+    private javax.swing.JButton brandsButton;
     private javax.swing.JButton carsButton;
     private javax.swing.JPanel carsCard;
     private javax.swing.JLabel carsTitle;
     private javax.swing.JLabel carsVal;
     private javax.swing.JPanel contentPanel;
+    private javax.swing.JButton customersButton;
     private javax.swing.JPanel earningsCard;
     private javax.swing.JLabel earningsTitle;
     private javax.swing.JLabel earningsVal;
     private javax.swing.JPanel headerPanel;
-    private javax.swing.JLabel locBgLabel;
     private javax.swing.JButton locationsButton;
-    private javax.swing.JPanel locationsPanel;
+    private view.LocationPanel locationsPanel;
     private javax.swing.JButton logoutButton;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JButton overviewButton;
@@ -463,10 +480,5 @@ public class AdminDashboard extends javax.swing.JFrame {
     private javax.swing.JLabel roleTagLabel;
     private javax.swing.JPanel sidebarPanel;
     private javax.swing.JLabel welcomeLabel;
-    
-    // CRUD modular components embedded
-    private view.CarPanel carPanel;
-    private javax.swing.JButton brandsButton;
-    private view.BrandPanel brandPanel;
     // End of variables declaration//GEN-END:variables
 }
