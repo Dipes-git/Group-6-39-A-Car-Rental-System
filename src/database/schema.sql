@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     security_question VARCHAR(255) NOT NULL,
     security_answer VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'user'
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    status VARCHAR(20) NOT NULL DEFAULT 'Active'
 );
 
 -- 3. Create the brands table (Sprint 2 Extension: Brand Selection)
@@ -36,25 +37,48 @@ CREATE TABLE IF NOT EXISTS cars (
     FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE
 );
 
+-- 4b. Create the locations table (Sprint 3: Locations/Branches Management)
+CREATE TABLE IF NOT EXISTS locations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    city VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL
+);
+
+-- Seed initial mockup locations
+INSERT INTO locations (city, address)
+SELECT 'City 1', 'address 1' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 1' AND address = 'address 1');
+INSERT INTO locations (city, address)
+SELECT 'City 2', 'address 22' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 2' AND address = 'address 22');
+INSERT INTO locations (city, address)
+SELECT 'City 3', 'address 33' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 3' AND address = 'address 33');
+INSERT INTO locations (city, address)
+SELECT 'City 4', 'address 44' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 4' AND address = 'address 44');
+INSERT INTO locations (city, address)
+SELECT 'City 1', 'address 100' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 1' AND address = 'address 100');
+INSERT INTO locations (city, address)
+SELECT 'City 3', 'bbbbbbbbbbbbbbbb' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 3' AND address = 'bbbbbbbbbbbbbbbb');
+INSERT INTO locations (city, address)
+SELECT 'City 1', 'aaaaaaaaaa' WHERE NOT EXISTS (SELECT 1 FROM locations WHERE city = 'City 1' AND address = 'aaaaaaaaaa');
+
 -- 5. Seed initial brands (Only if not already present)
 INSERT INTO brands (name, logo_path) 
-SELECT 'Tesla', '/images/logos/tesla.png'
+SELECT 'Tesla', '/images/tesla.png'
 WHERE NOT EXISTS (SELECT 1 FROM brands WHERE name = 'Tesla');
 
 INSERT INTO brands (name, logo_path) 
-SELECT 'Ford', '/images/logos/ford.png'
+SELECT 'Ford', '/images/ford.png'
 WHERE NOT EXISTS (SELECT 1 FROM brands WHERE name = 'Ford');
 
 INSERT INTO brands (name, logo_path) 
-SELECT 'Toyota', '/images/logos/toyota.png'
+SELECT 'Toyota', '/images/toyota.png'
 WHERE NOT EXISTS (SELECT 1 FROM brands WHERE name = 'Toyota');
 
 INSERT INTO brands (name, logo_path) 
-SELECT 'BMW', '/images/logos/bmw.png'
+SELECT 'BMW', '/images/bmw.png'
 WHERE NOT EXISTS (SELECT 1 FROM brands WHERE name = 'BMW');
 
 INSERT INTO brands (name, logo_path) 
-SELECT 'Audi', '/images/logos/audi.png'
+SELECT 'Audi', '/images/audi.png'
 WHERE NOT EXISTS (SELECT 1 FROM brands WHERE name = 'Audi');
 
 -- 6. Seed initial cars into inventory (Only if not already present)
