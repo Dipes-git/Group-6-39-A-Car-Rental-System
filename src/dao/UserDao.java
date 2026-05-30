@@ -4,7 +4,8 @@ import model.User;
 
 /**
  * Data Access Object (DAO) interface for User operations.
- * Declares database interaction contracts, now supporting security question recovery flows.
+ * Declares database interaction contracts, supporting security question recovery flows,
+ * and extended in Sprint 3 to support administrative customer account management.
  * 
  * @author dipes
  */
@@ -52,4 +53,28 @@ public interface UserDao {
      * @return true if verification and password update succeeded, false otherwise
      */
     boolean verifyAnswerAndUpdatePassword(String username, String answer, String newPassword);
+
+    /**
+     * Retrieves all registered customer accounts (role = 'user') from the database.
+     * 
+     * @return A list of User objects representing customers
+     */
+    java.util.List<User> getAllCustomers();
+
+    /**
+     * Updates the status (Active/Suspended) of a specific user account.
+     * 
+     * @param userId The unique ID of the user
+     * @param status The new status value
+     * @return true if the database update succeeded, false otherwise
+     */
+    boolean updateUserStatus(int userId, String status);
+
+    /**
+     * Permanently deletes a specific user account from the database.
+     * 
+     * @param userId The unique ID of the user to delete
+     * @return true if the deletion succeeded, false otherwise
+     */
+    boolean deleteUser(int userId);
 }
