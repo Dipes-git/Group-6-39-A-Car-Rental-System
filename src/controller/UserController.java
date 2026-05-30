@@ -1,5 +1,9 @@
 package controller;
 
+import javax.swing.table.DefaultTableModel;
+import view.CustomerPanel;
+
+
 import dao.UserDao;
 import dao.UserDaoImpl;
 import model.User;
@@ -384,5 +388,112 @@ public class UserController {
      */
     public void exitApplication() {
         System.exit(0);
+    }
+    // ==================== Customer Management ====================
+
+    /**
+     * Loads all registered customers into the CustomerPanel's JTable.
+     * 
+     * @param view The CustomerPanel instance
+     */
+    public void loadCustomersTable(CustomerPanel view) {
+        DefaultTableModel model = (DefaultTableModel) view.getCustomersTable().getModel();
+        model.setRowCount(0); // Reset existing rows
+
+        java.util.List<User> customers = userDao.getAllCustomers();
+        for (User u : customers) {
+            model.addRow(new Object[]{
+                u.getId(),
+                u.getUsername(),
+                u.getEmail(),
+                u.getRole(),
+                u.getStatus()
+            });
+        }
+    }
+
+    /**
+     * Toggles the active status of the selected customer between Active and Suspended.
+     * 
+     * @param view The CustomerPanel instance
+     */
+    public void handleStatusToggle(CustomerPanel view) {
+        int selectedRow = view.getCustomersTable().getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(view, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int userId = (int) view.getCustomersTable().getValueAt(selectedRow, 0);
+        String username = view.getCustomersTable().getValueAt(selectedRow, 1).toString();
+        String currentStatus = view.getCustomersTable().getValueAt(selectedRow, 4).toString();
+
+        String newStatus = "Active".equals(currentStatus) ? "Suspended" : "Active";
+
+        boolean success = userDao.updateUserStatus(userId, newStatus);
+        if (success) {
+            JOptionPane.showMessageDialog(view, "Successfully updated status of customer '" + username + "' to " + newStatus + "!", "Status Updated", JOptionPane.INFORMATION_MESSAGE);
+            loadCustomersTable(view);
+            view.clearInputs();
+        } else {
+            JOptionPane.showMessageDialog(view, "Failed to update customer status due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Permanently deletes the selected customer account.
+     * 
+     * @param view The CustomerPanel instance
+     */
+    public void handleDeleteCustomer(CustomerPanel view) {
+        int selectedRow = view.getCustomersTable().getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(view, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int userId = (int) view.getCustomersTable().getValueAt(selectedRow, 0);
+        String username = view.getCustomersTable().getValueAt(selectedRow, 1).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(view, 
+            "Are you sure you want to permanently delete customer '" + username + "'?\nThis action cannot be undone.", 
+            "Confirm Permanent Deletion", 
+            JOptionPane.YES_NO_OPTION, 
+            JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = userDao.deleteUser(userId);
+            if (success) {
+                JOptionPane.showMessageDialog(view, "Successfully deleted customer '" + username + "'!", "Customer Deleted", JOptionPane.INFORMATION_MESSAGE);
+                loadCustomersTable(view);
+                view.clearInputs();
+            } else {
+                JOptionPane.showMessageDialog(view, "Failed to delete customer due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    /**
+     * Performs a real-time search and filter on customers by username or email.
+     * 
+     * @param view The CustomerPanel instance
+     */
+    public void handleSearchCustomer(CustomerPanel view) {
+        String query = view.getSearchField().getText().trim().toLowerCase();
+        DefaultTableModel model = (DefaultTableModel) view.getCustomersTable().getModel();
+        model.setRowCount(0);
+
+        java.util.List<User> customers = userDao.getAllCustomers();
+        for (User u : customers) {
+            if (u.getUsername().toLowerCase().contains(query) || u.getEmail().toLowerCase().contains(query)) {
+                model.addRow(new Object[]{
+                    u.getId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getRole(),
+                    u.getStatus()
+                });
+            }
+        }
     }
 }
