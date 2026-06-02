@@ -34,6 +34,7 @@ public class UserDaoImpl implements UserDao {
             conn = connector.openConnection();
             if (conn != null) {
                 addColumnIfMissing(conn, "role", "VARCHAR(20) NOT NULL DEFAULT 'user'");
+                addColumnIfMissing(conn, "status", "VARCHAR(20) NOT NULL DEFAULT 'Active'");
             }
         } catch (Exception e) {
             System.err.println("[UserDaoImpl] Self-healing DB check encountered an error: " + e.getMessage());
@@ -124,6 +125,7 @@ public class UserDaoImpl implements UserDao {
                 user.setSecurityQuestion(rs.getString("security_question"));
                 user.setSecurityAnswer(rs.getString("security_answer"));
                 user.setRole(rs.getString("role"));
+                user.setStatus(rs.getString("status"));
                 return user;
             }
 
@@ -222,6 +224,88 @@ public class UserDaoImpl implements UserDao {
         } finally {
             closeResources(conn, stmt, null);
         }
+    }
+
+    @Override
+    public java.util.List<User> getAllCustomers() {
+        java.util.List<User> customers = new java.util.ArrayList<>();
+        String query = "SELECT * FROM users WHERE role = 'user' ORDER BY id ASC";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setUsername(rs.getString("username"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPassword(rs.getString("password"));
+                    user.setSecurityQuestion(rs.getString("security_question"));
+                    user.setSecurityAnswer(rs.getString("security_answer"));
+                    user.setRole(rs.getString("role"));
+                    user.setStatus(rs.getString("status"));
+                    customers.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Error retrieving all customers: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return customers;
+    }
+
+    @Override
+    public boolean updateUserStatus(int userId, String status) {
+        String query = "UPDATE users SET status = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                stmt.setString(1, status);
+                stmt.setInt(2, userId);
+                int rowsUpdated = stmt.executeUpdate();
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Error updating user status: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deleteUser(int userId) {
+        String query = "DELETE FROM users WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, userId);
+                int rowsDeleted = stmt.executeUpdate();
+                return rowsDeleted > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDaoImpl] Error deleting user: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+        return false;
     }
 
     /**
