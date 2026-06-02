@@ -36,6 +36,21 @@ public class User {
         this.role = role;
         this.status = "Active";
     }
+
+    /**
+     * Constructor for creating a new user with status.
+     */
+    public User(String username, String email, String password, String securityQuestion, String securityAnswer, String role, String status) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.securityQuestion = securityQuestion;
+        this.securityAnswer = securityAnswer;
+        this.role = role;
+        this.status = status;
+    }
+
+    /**
      * Full constructor (e.g., when retrieving a user from the database with an active ID).
      */
     public User(int id, String username, String email, String password, String securityQuestion, String securityAnswer, String role) {
@@ -48,6 +63,22 @@ public class User {
         this.role = role;
         this.status = "Active";
     }
+
+    /**
+     * Full constructor with status (e.g., when retrieving from DB).
+     */
+    public User(int id, String username, String email, String password, String securityQuestion, String securityAnswer, String role, String status) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.securityQuestion = securityQuestion;
+        this.securityAnswer = securityAnswer;
+        this.role = role;
+        this.status = status;
+    }
+
+    // Getters and Setters
 
     public int getId() {
         return id;
@@ -105,4 +136,11 @@ public class User {
         this.role = role;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
