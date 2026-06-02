@@ -4,7 +4,8 @@ import model.User;
 
 /**
  * Data Access Object (DAO) interface for User operations.
- * Declares database interaction contracts, now supporting security question recovery flows.
+ * Declares database interaction contracts, supporting security question recovery flows,
+ * and extended in Sprint 3 to support administrative customer account management.
  * 
  * @author dipes
  */
@@ -52,4 +53,5 @@ public interface UserDao {
      * @return true if verification and password update succeeded, false otherwise
      */
     boolean verifyAnswerAndUpdatePassword(String username, String answer, String newPassword);
+
 }
