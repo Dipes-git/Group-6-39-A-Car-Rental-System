@@ -1,9 +1,7 @@
 package controller;
 
 import dao.CarDao;
-import dao.CarDaoImpl;
 import dao.BrandDao;
-import dao.BrandDaoImpl;
 import model.Car;
 import model.Brand;
 import view.UserDashboard;
@@ -25,8 +23,8 @@ public class CarController {
     private final BrandDao brandDao;
 
     public CarController() {
-        this.carDao = new CarDaoImpl();
-        this.brandDao = new BrandDaoImpl();
+        this.carDao = new CarDao();
+        this.brandDao = new BrandDao();
     }
 
     /**

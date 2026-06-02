@@ -1,7 +1,6 @@
 package controller;
 
 import dao.BrandDao;
-import dao.BrandDaoImpl;
 import model.Brand;
 import view.BrandPanel;
 import view.AdminDashboard;
@@ -24,7 +23,7 @@ public class BrandController {
     private final BrandDao brandDao;
 
     public BrandController() {
-        this.brandDao = new BrandDaoImpl();
+        this.brandDao = new BrandDao();
     }
 
     /**

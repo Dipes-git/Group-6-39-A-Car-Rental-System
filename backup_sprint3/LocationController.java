@@ -1,6 +1,7 @@
 package controller;
 
 import dao.LocationDao;
+import dao.LocationDaoImpl;
 import model.Location;
 import view.LocationPanel;
 import javax.swing.JOptionPane;
@@ -20,7 +21,7 @@ public class LocationController {
     private final LocationDao locationDao;
 
     public LocationController() {
-        this.locationDao = new LocationDao();
+        this.locationDao = new LocationDaoImpl();
     }
 
     /**
