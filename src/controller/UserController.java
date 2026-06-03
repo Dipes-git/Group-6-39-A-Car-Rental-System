@@ -5,7 +5,6 @@ import view.CustomerPanel;
 
 
 import dao.UserDao;
-import dao.UserDaoImpl;
 import model.User;
 import view.LoginForm;
 import view.SignupForm;
@@ -25,7 +24,7 @@ public class UserController {
     private final UserDao userDao;
 
     public UserController() {
-        this.userDao = new UserDaoImpl();
+        this.userDao = new UserDao();
     }
 
     // ==================== Authentication ====================

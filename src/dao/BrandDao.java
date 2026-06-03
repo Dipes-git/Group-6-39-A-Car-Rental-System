@@ -1,47 +1,190 @@
 package dao;
 
+import database.MySqlConnector;
 import model.Brand;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Data Access Object (DAO) Interface for Brand management.
- * Defines standard CRUD database operations for car brands.
+ * Concrete Data Access Object (DAO) class managing Brand database operations.
+ * Strictly isolates SQL operations from View layers, supporting normalized brand schemas.
  * 
  * @author dipes
  */
-public interface BrandDao {
-    
+public class BrandDao {
+
+    private final MySqlConnector connector;
+
+    public BrandDao() {
+        this.connector = new MySqlConnector();
+    }
+
     /**
      * Adds a new brand to the system.
-     * @param brand The brand model containing name and logo path.
-     * @return true if successful, false otherwise.
      */
-    boolean addBrand(Brand brand);
+    public boolean addBrand(Brand brand) {
+        String query = "INSERT INTO brands (name, logo_path) VALUES (?, ?)";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return false;
+            
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, brand.getName());
+            stmt.setString(2, brand.getLogoPath());
+
+            int rowsInserted = stmt.executeUpdate();
+            return rowsInserted > 0;
+
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error adding brand: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
 
     /**
      * Updates an existing brand record in the database.
-     * @param brand The brand model with updated fields.
-     * @return true if successful, false otherwise.
      */
-    boolean updateBrand(Brand brand);
+    public boolean updateBrand(Brand brand) {
+        String query = "UPDATE brands SET name = ?, logo_path = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return false;
+            
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, brand.getName());
+            stmt.setString(2, brand.getLogoPath());
+            stmt.setInt(3, brand.getId());
+
+            int rowsUpdated = stmt.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error updating brand: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
 
     /**
      * Deletes a brand from the database by ID.
-     * @param id The target brand ID.
-     * @return true if successful, false otherwise.
      */
-    boolean deleteBrand(int id);
+    public boolean deleteBrand(int id) {
+        String query = "DELETE FROM brands WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return false;
+            
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+
+            int rowsDeleted = stmt.executeUpdate();
+            return rowsDeleted > 0;
+
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error deleting brand: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
 
     /**
      * Retrieves a single brand record by its primary key ID.
-     * @param id The target brand ID.
-     * @return The Brand object if found, null otherwise.
      */
-    Brand getBrandById(int id);
+    public Brand getBrandById(int id) {
+        String query = "SELECT * FROM brands WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return null;
+            
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                Brand brand = new Brand();
+                brand.setId(rs.getInt("id"));
+                brand.setName(rs.getString("name"));
+                brand.setLogoPath(rs.getString("logo_path"));
+                return brand;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error fetching brand by ID: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return null;
+    }
 
     /**
      * Fetches all brands present in the system database.
-     * @return A list of all Brand records.
      */
-    List<Brand> getAllBrands();
+    public List<Brand> getAllBrands() {
+        String query = "SELECT * FROM brands ORDER BY name ASC";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<Brand> brandList = new ArrayList<>();
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return brandList;
+            
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Brand brand = new Brand();
+                brand.setId(rs.getInt("id"));
+                brand.setName(rs.getString("name"));
+                brand.setLogoPath(rs.getString("logo_path"));
+                brandList.add(brand);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error fetching all brands: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return brandList;
+    }
+
+    /**
+     * Helper method to clean up JDBC resources safely.
+     */
+    private void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) connector.closeConnection(conn);
+        } catch (SQLException e) {
+            System.err.println("[BrandDao] Error closing JDBC resources: " + e.getMessage());
+        }
+    }
 }

@@ -106,3 +106,5 @@ WHERE NOT EXISTS (SELECT 1 FROM cars WHERE model = 'e-tron' AND brand_id = 5);
 SELECT * FROM users;
 SELECT * FROM brands;
 SELECT * FROM cars;
+
+show variables like 'autocommit';
