@@ -1,9 +1,5 @@
 package controller;
 
-import javax.swing.table.DefaultTableModel;
-import view.CustomerPanel;
-
-
 import dao.UserDao;
 import model.User;
 import view.LoginForm;
@@ -11,318 +7,517 @@ import view.SignupForm;
 import view.ForgotPasswordForm;
 import view.AdminDashboard;
 import view.UserDashboard;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import view.CustomerPanel;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.List;
 
 /**
-
+ * Controller class managing user authentication, registration, password recovery,
+ * dashboard coordination, and customer administrative management.
+ * Overloaded constructors support strict MVC separation across all user-related views.
  * 
  * @author dipes
  */
 public class UserController {
 
     private final UserDao userDao;
+    private LoginForm loginView;
+    private SignupForm signupView;
+    private ForgotPasswordForm forgotView;
+    private AdminDashboard adminDashboard;
+    private UserDashboard userDashboard;
+    private CustomerPanel customerPanel;
 
     public UserController() {
         this.userDao = new UserDao();
     }
 
-    // ==================== Authentication ====================
+    public UserController(LoginForm loginView) {
+        this.userDao = new UserDao();
+        this.loginView = loginView;
+        setupLoginPlaceholders();
+        
+        // Wire listeners
+        this.loginView.addCloseListener(new CloseListener());
+        this.loginView.addShowPasswordListener(new ToggleLoginPasswordListener());
+        this.loginView.addLoginListener(new LoginListener());
+        this.loginView.addForgotPasswordListener(new NavigateForgotPasswordListener());
+        this.loginView.addSignupListener(new NavigateSignupListener());
+    }
 
-    /**
-     * Handles the authentication request from the LoginForm.
-     * Reads credentials directly from the view's public getters.
-     * Routes to AdminDashboard or UserDashboard based on the user's role.
-     * 
-     * @param view The LoginForm instance
-     * @return true if login was successful, false otherwise
-     */
-    public boolean handleLogin(LoginForm view) {
-        String username = view.getUsername();
-        String password = view.getPassword();
+    public UserController(SignupForm signupView) {
+        this.userDao = new UserDao();
+        this.signupView = signupView;
+        setupSignupPlaceholders();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please enter both Username and Password.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
+        // Wire listeners
+        this.signupView.addShowPasswordListener(new ToggleSignupPasswordListener());
+        this.signupView.addRegisterListener(new SignupListener());
+        this.signupView.addLoginLabelListener(new NavigateLoginListener());
+    }
 
-        User user = userDao.loginUser(username, password);
-        if (user != null) {
-            JOptionPane.showMessageDialog(view, "Login Successful!\nWelcome, " + user.getUsername() + "!", "Success", JOptionPane.INFORMATION_MESSAGE);
+    public UserController(ForgotPasswordForm forgotView) {
+        this.userDao = new UserDao();
+        this.forgotView = forgotView;
+        setupForgotPasswordPlaceholders();
 
-            // Route to the appropriate dashboard based on role
-            if ("admin".equalsIgnoreCase(user.getRole())) {
-                navigateToAdminDashboard(view, user.getUsername());
-            } else {
-                navigateToUserDashboard(view, user.getUsername());
+        // Wire listeners
+        this.forgotView.addCloseListener(new CloseListener());
+        this.forgotView.addBackToLoginListener(new NavigateLoginListener());
+        this.forgotView.addFetchListener(new FetchQuestionListener());
+        this.forgotView.addResetListener(new ResetPasswordListener());
+    }
+
+    public UserController(AdminDashboard adminDashboard) {
+        this.userDao = new UserDao();
+        this.adminDashboard = adminDashboard;
+        
+        // Wire listeners
+        this.adminDashboard.addLogoutListener(new LogoutListener());
+    }
+
+    public UserController(UserDashboard userDashboard) {
+        this.userDao = new UserDao();
+        this.userDashboard = userDashboard;
+
+        // Wire listeners
+        this.userDashboard.addLogoutListener(new LogoutListener());
+    }
+
+    public UserController(CustomerPanel customerPanel) {
+        this.userDao = new UserDao();
+        this.customerPanel = customerPanel;
+
+        // Load initial records
+        loadCustomersTable(this.customerPanel);
+
+        // Wire listeners
+        this.customerPanel.getBtnToggleStatus().addActionListener(new ToggleStatusListener());
+        this.customerPanel.getBtnDeleteCustomer().addActionListener(new DeleteCustomerListener());
+        this.customerPanel.getBtnRefresh().addActionListener(new RefreshCustomerListener());
+        
+        this.customerPanel.getSearchField().addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent evt) {
+                handleSearchCustomer(customerPanel);
             }
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(view, "Invalid Username or Password.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
+        });
+    }
+
+    // ==================== Listeners & Inner Classes ====================
+
+    class CloseListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            System.exit(0);
         }
     }
 
-    // ==================== Registration ====================
+    class ToggleLoginPasswordListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (loginView == null) return;
+            JPasswordField pf = loginView.getPasswordField();
+            String currentText = new String(pf.getPassword());
+            if ("Enter Password".equals(currentText) && pf.getForeground().equals(java.awt.Color.GRAY)) {
+                return;
+            }
+            if (loginView.isShowPasswordSelected()) {
+                loginView.setPasswordEchoChar((char) 0);
+            } else {
+                loginView.setPasswordEchoChar('*');
+            }
+        }
+    }
+
+    class ToggleSignupPasswordListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (signupView == null) return;
+            JPasswordField pf = signupView.getPasswordField();
+            JPasswordField cpf = signupView.getConfirmPasswordField();
+            boolean show = signupView.isShowPasswordSelected();
+
+            String passText = new String(pf.getPassword());
+            if (!("Enter Password".equals(passText) && pf.getForeground().equals(java.awt.Color.GRAY))) {
+                pf.setEchoChar(show ? (char) 0 : '*');
+            }
+
+            String confirmText = new String(cpf.getPassword());
+            if (!("Confirm Password".equals(confirmText) && cpf.getForeground().equals(java.awt.Color.GRAY))) {
+                cpf.setEchoChar(show ? (char) 0 : '*');
+            }
+        }
+    }
+
+    class LoginListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (loginView == null) return;
+            String username = loginView.getUsername();
+            String password = loginView.getPassword();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(loginView, "Please enter both Username and Password.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            User user = userDao.loginUser(username, password);
+            if (user != null) {
+                if ("Suspended".equalsIgnoreCase(user.getStatus())) {
+                    JOptionPane.showMessageDialog(loginView, "Your account is suspended. Please contact support.", "Access Denied", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                JOptionPane.showMessageDialog(loginView, "Login Successful!\nWelcome, " + user.getUsername() + "!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                if ("admin".equalsIgnoreCase(user.getRole())) {
+                    AdminDashboard dashboard = new AdminDashboard();
+                    new UserController(dashboard);
+                    
+                    // Wire sub-panel controllers
+                    BrandController brandController = new BrandController(dashboard.getBrandPanel());
+                    CarController carController = new CarController(dashboard.getCarPanel());
+                    new UserController(dashboard.getCustomerPanel());
+                    new LocationController(dashboard.getLocationsPanel());
+                    new BookingController(dashboard);
+                    
+                    // Wire redirect callback in controller: refresh brand data, then show
+                    dashboard.getCarPanel().setOnBrandsTabRedirect(() -> {
+                        brandController.loadBrandTable();
+                        dashboard.showPanel("brands");
+                    });
+                    
+                    dashboard.setWelcomeText("Welcome, " + user.getUsername() + "!");
+                    dashboard.setVisible(true);
+                } else {
+                    UserDashboard dashboard = new UserDashboard();
+                    new UserController(dashboard);
+                    
+                    // Wire sub-panel controllers for User Dashboard mode
+                    CarController carController = new CarController(dashboard.getCarPanel());
+                    carController.setCurrentUser(user);
+                    
+                    BrandController brandController = new BrandController(dashboard.getBrandPanel());
+                    
+                    // Wire redirect callback in controller: refresh brand data, then show
+                    dashboard.getCarPanel().setOnBrandsTabRedirect(() -> {
+                        brandController.loadBrandTable();
+                        dashboard.showPanel("brands");
+                    });
+                    
+                    BookingController bookingController = new BookingController(dashboard, user);
+                    
+                    // Wire automatic reload of history when reservation completes
+                    carController.setOnBookingComplete(() -> {
+                        bookingController.loadUserBookingsTable();
+                    });
+                    
+                    // Wire brand category visual fleet filtration callback in User Mode!
+                    dashboard.getBrandPanel().setOnViewFleetCallback(brandName -> {
+                        new CarController().loadAdminCarTable(dashboard.getCarPanel(), brandName);
+                        dashboard.showPanel("browse");
+                    });
+                    
+                    dashboard.setWelcomeText("Welcome, " + user.getUsername() + "!");
+                    dashboard.setVisible(true);
+                }
+                loginView.dispose();
+            } else {
+                JOptionPane.showMessageDialog(loginView, "Invalid Username or Password.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    class SignupListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (signupView == null) return;
+            String username = signupView.getUsername();
+            String email = signupView.getEmail();
+            String password = signupView.getPassword();
+            String confirmPassword = signupView.getConfirmPassword();
+            String role = signupView.getSelectedRole();
+            String securityQuestion = signupView.getSecurityQuestion();
+            String securityAnswer = signupView.getSecurityAnswer();
+
+            if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || securityAnswer.isEmpty()) {
+                JOptionPane.showMessageDialog(signupView, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!password.equals(confirmPassword)) {
+                JOptionPane.showMessageDialog(signupView, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (userDao.checkUserExists(username)) {
+                JOptionPane.showMessageDialog(signupView, "Username is already taken.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            User user = new User(username, email, password, securityQuestion, securityAnswer, role);
+            boolean registered = userDao.registerUser(user);
+
+            if (registered) {
+                JOptionPane.showMessageDialog(signupView, "Registration Successful!\nYou can now login.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                
+                LoginForm loginForm = new LoginForm();
+                new UserController(loginForm);
+                loginForm.setVisible(true);
+                signupView.dispose();
+            } else {
+                JOptionPane.showMessageDialog(signupView, "Registration failed due to a database error. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    class FetchQuestionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (forgotView == null) return;
+            String username = forgotView.getUsername();
+
+            if (username.isEmpty()) {
+                JOptionPane.showMessageDialog(forgotView, "Please enter your Username to retrieve your security question.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String question = userDao.getSecurityQuestion(username);
+            if (question != null) {
+                forgotView.setQuestionDisplayText(question);
+            } else {
+                JOptionPane.showMessageDialog(forgotView, "Username not found. Please verify spelling.", "Error", JOptionPane.ERROR_MESSAGE);
+                forgotView.setQuestionDisplayText("Retrieve your question first.");
+            }
+        }
+    }
+
+    class ResetPasswordListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (forgotView == null) return;
+            String username = forgotView.getUsername();
+            String answer = forgotView.getSecurityAnswer();
+            String newPassword = forgotView.getNewPassword();
+            String confirmPassword = forgotView.getConfirmPassword();
+
+            if (username.isEmpty() || answer.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                JOptionPane.showMessageDialog(forgotView, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                JOptionPane.showMessageDialog(forgotView, "New passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean resetSucceeded = userDao.verifyAnswerAndUpdatePassword(username, answer, newPassword);
+
+            if (resetSucceeded) {
+                JOptionPane.showMessageDialog(forgotView, "Password reset successfully!\nYou can now log in with your new password.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                
+                LoginForm loginForm = new LoginForm();
+                new UserController(loginForm);
+                loginForm.setVisible(true);
+                forgotView.dispose();
+            } else {
+                JOptionPane.showMessageDialog(forgotView, "Incorrect answer to the security question. Reset failed.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    class NavigateForgotPasswordListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            ForgotPasswordForm fpForm = new ForgotPasswordForm();
+            new UserController(fpForm);
+            fpForm.setVisible(true);
+            if (loginView != null) loginView.dispose();
+        }
+    }
+
+    class NavigateSignupListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            SignupForm sForm = new SignupForm();
+            new UserController(sForm);
+            sForm.setVisible(true);
+            if (loginView != null) loginView.dispose();
+        }
+    }
+
+    class NavigateLoginListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            LoginForm loginForm = new LoginForm();
+            new UserController(loginForm);
+            loginForm.setVisible(true);
+            if (signupView != null) signupView.dispose();
+            if (forgotView != null) forgotView.dispose();
+        }
+    }
+
+    class LogoutListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            LoginForm loginForm = new LoginForm();
+            new UserController(loginForm);
+            loginForm.setVisible(true);
+            
+            if (adminDashboard != null) adminDashboard.dispose();
+            if (userDashboard != null) userDashboard.dispose();
+        }
+    }
+
+    class ToggleStatusListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (customerPanel == null) return;
+            int selectedRow = customerPanel.getCustomersTable().getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(customerPanel, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int userId = (int) customerPanel.getCustomersTable().getValueAt(selectedRow, 0);
+            String username = customerPanel.getCustomersTable().getValueAt(selectedRow, 1).toString();
+            String currentStatus = customerPanel.getCustomersTable().getValueAt(selectedRow, 4).toString();
+
+            String newStatus = "Active".equals(currentStatus) ? "Suspended" : "Active";
+
+            boolean success = userDao.updateUserStatus(userId, newStatus);
+            if (success) {
+                JOptionPane.showMessageDialog(customerPanel, "Successfully updated status of customer '" + username + "' to " + newStatus + "!", "Status Updated", JOptionPane.INFORMATION_MESSAGE);
+                loadCustomersTable(customerPanel);
+                customerPanel.clearInputs();
+            } else {
+                JOptionPane.showMessageDialog(customerPanel, "Failed to update customer status due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    class DeleteCustomerListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (customerPanel == null) return;
+            int selectedRow = customerPanel.getCustomersTable().getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(customerPanel, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int userId = (int) customerPanel.getCustomersTable().getValueAt(selectedRow, 0);
+            String username = customerPanel.getCustomersTable().getValueAt(selectedRow, 1).toString();
+
+            int confirm = JOptionPane.showConfirmDialog(customerPanel, 
+                "Are you sure you want to permanently delete customer '" + username + "'?\nThis action cannot be undone.", 
+                "Confirm Permanent Deletion", 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.WARNING_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean success = userDao.deleteUser(userId);
+                if (success) {
+                    JOptionPane.showMessageDialog(customerPanel, "Successfully deleted customer '" + username + "'!", "Customer Deleted", JOptionPane.INFORMATION_MESSAGE);
+                    loadCustomersTable(customerPanel);
+                    customerPanel.clearInputs();
+                } else {
+                    JOptionPane.showMessageDialog(customerPanel, "Failed to delete customer due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    class RefreshCustomerListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (customerPanel == null) return;
+            loadCustomersTable(customerPanel);
+            customerPanel.clearInputs();
+        }
+    }
+
+    // ==================== Customer Management operations ====================
 
     /**
-     * Handles the user registration request from the SignupForm.
-     * Reads all form data directly from the view's public getters,
-     * including the selected role (admin or user).
-     * 
-     * @param view The SignupForm instance
-     * @return true if registration succeeded, false otherwise
+     * Loads all registered customers into the CustomerPanel's JTable.
      */
-    public boolean handleSignup(SignupForm view) {
-        String username = view.getUsername();
-        String email = view.getEmail();
-        String password = view.getPassword();
-        String confirmPassword = view.getConfirmPassword();
-        String role = view.getSelectedRole();
-        String securityQuestion = view.getSecurityQuestion();
-        String securityAnswer = view.getSecurityAnswer();
+    public void loadCustomersTable(CustomerPanel viewPanel) {
+        DefaultTableModel model = (DefaultTableModel) viewPanel.getCustomersTable().getModel();
+        model.setRowCount(0); // Reset existing rows
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || securityAnswer.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        if (!password.equals(confirmPassword)) {
-            JOptionPane.showMessageDialog(view, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        // Check if username is already taken
-        if (userDao.checkUserExists(username)) {
-            JOptionPane.showMessageDialog(view, "Username is already taken.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        // Package into User model and register with selected role
-        User user = new User(username, email, password, securityQuestion, securityAnswer, role);
-        boolean registered = userDao.registerUser(user);
-
-        if (registered) {
-            JOptionPane.showMessageDialog(view, "Registration Successful!\nYou can now login.", "Success", JOptionPane.INFORMATION_MESSAGE);
-            navigateToLogin(view);
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(view, "Registration failed due to a database error. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-    }
-
-    // ==================== Password Recovery ====================
-
-    /**
-     * Handles fetching the security question for a given username.
-     * Reads the username from the view and updates the question display label.
-     * 
-     * @param view The ForgotPasswordForm instance
-     */
-    public void handleFetchQuestion(ForgotPasswordForm view) {
-        String username = view.getUsername();
-
-        if (username.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please enter your Username to retrieve your security question.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String question = userDao.getSecurityQuestion(username);
-        if (question != null) {
-            view.setQuestionDisplayText(question);
-        } else {
-            JOptionPane.showMessageDialog(view, "Username not found. Please verify spelling.", "Error", JOptionPane.ERROR_MESSAGE);
-            view.setQuestionDisplayText("Retrieve your question first.");
+        List<User> customers = userDao.getAllCustomers();
+        for (User u : customers) {
+            model.addRow(new Object[]{
+                u.getId(),
+                u.getUsername(),
+                u.getEmail(),
+                u.getRole(),
+                u.getStatus()
+            });
         }
     }
 
     /**
-     * Verifies the security answer and resets the user's password.
-     * Reads all form data directly from the view's public getters.
-     * 
-     * @param view The ForgotPasswordForm instance
-     * @return true if password reset succeeded, false otherwise
+     * Performs a real-time search and filter on customers by username or email.
      */
-    public boolean handleResetPassword(ForgotPasswordForm view) {
-        String username = view.getUsername();
-        String answer = view.getSecurityAnswer();
-        String newPassword = view.getNewPassword();
-        String confirmPassword = view.getConfirmPassword();
+    public void handleSearchCustomer(CustomerPanel viewPanel) {
+        String query = viewPanel.getSearchField().getText().trim().toLowerCase();
+        DefaultTableModel model = (DefaultTableModel) viewPanel.getCustomersTable().getModel();
+        model.setRowCount(0);
 
-        if (username.isEmpty() || answer.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
+        List<User> customers = userDao.getAllCustomers();
+        for (User u : customers) {
+            if (u.getUsername().toLowerCase().contains(query) || u.getEmail().toLowerCase().contains(query)) {
+                model.addRow(new Object[]{
+                    u.getId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getRole(),
+                    u.getStatus()
+                });
+            }
         }
-
-        if (!newPassword.equals(confirmPassword)) {
-            JOptionPane.showMessageDialog(view, "New passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        boolean resetSucceeded = userDao.verifyAnswerAndUpdatePassword(username, answer, newPassword);
-
-        if (resetSucceeded) {
-            JOptionPane.showMessageDialog(view, "Password reset successfully!\nYou can now log in with your new password.", "Success", JOptionPane.INFORMATION_MESSAGE);
-            navigateToLogin(view);
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(view, "Incorrect answer to the security question. Reset failed.", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-    }
-
-    // ==================== Navigation ====================
-
-    /**
-     * Navigates from any screen to the Login screen.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     */
-    public void navigateToLogin(JFrame currentView) {
-        LoginForm loginForm = new LoginForm();
-        loginForm.setVisible(true);
-        currentView.dispose();
-    }
-
-    /**
-     * Navigates from any screen to the Signup screen.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     */
-    public void navigateToSignup(JFrame currentView) {
-        SignupForm signupForm = new SignupForm();
-        signupForm.setVisible(true);
-        currentView.dispose();
-    }
-
-    /**
-     * Navigates from any screen to the Forgot Password screen.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     */
-    public void navigateToForgotPassword(JFrame currentView) {
-        ForgotPasswordForm fpForm = new ForgotPasswordForm();
-        fpForm.setVisible(true);
-        currentView.dispose();
-    }
-
-    /**
-     * Navigates to the Admin Dashboard with a personalized welcome message.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     * @param username The authenticated admin's username
-     */
-    public void navigateToAdminDashboard(JFrame currentView, String username) {
-        AdminDashboard dashboard = new AdminDashboard();
-        dashboard.setWelcomeText("Welcome, " + username + "!");
-        dashboard.setVisible(true);
-        currentView.dispose();
-    }
-
-    /**
-     * Navigates to the User Dashboard with a personalized welcome message.
-     * 
-     * @param currentView The currently visible JFrame to dispose
-     * @param username The authenticated user's username
-     */
-    public void navigateToUserDashboard(JFrame currentView, String username) {
-        UserDashboard dashboard = new UserDashboard();
-        dashboard.setWelcomeText("Welcome, " + username + "!");
-        dashboard.setVisible(true);
-        currentView.dispose();
-    }
-
-    public void handleLogout(JFrame currentView) {
-        navigateToLogin(currentView);
-    }
-
-    public void handleAdminTabChanged(AdminDashboard view, String tabName) {
-        view.showPanel(tabName);
-    }
-
-    /**
-     * Handles tab switching inside the User Dashboard.
-     * 
-     * @param view The UserDashboard instance
-     * @param tabName The target tab/panel name to show
-     */
-    public void handleUserTabChanged(UserDashboard view, String tabName) {
-        view.showPanel(tabName);
     }
 
     // ==================== UI Helpers ====================
 
     /**
-     * Toggles password visibility on the Login form.
-     * Ensures it does not mess up if placeholder is active.
-     * 
-     * @param view The LoginForm instance
-     */
-    public void toggleLoginPasswordVisibility(LoginForm view) {
-        javax.swing.JPasswordField pf = view.getPasswordField();
-        String currentText = new String(pf.getPassword());
-        if ("Enter Password".equals(currentText) && pf.getForeground().equals(java.awt.Color.GRAY)) {
-            return;
-        }
-        if (view.isShowPasswordSelected()) {
-            view.setPasswordEchoChar((char) 0);
-        } else {
-            view.setPasswordEchoChar('*');
-        }
-    }
-
-    /**
-     * Toggles password visibility on the Signup form (both password fields).
-     * Ensures it does not mess up if placeholders are active.
-     * 
-     * @param view The SignupForm instance
-     */
-    public void toggleSignupPasswordVisibility(SignupForm view) {
-        javax.swing.JPasswordField pf = view.getPasswordField();
-        javax.swing.JPasswordField cpf = view.getConfirmPasswordField();
-        boolean show = view.isShowPasswordSelected();
-
-        // Handle password field
-        String passText = new String(pf.getPassword());
-        if (!("Enter Password".equals(passText) && pf.getForeground().equals(java.awt.Color.GRAY))) {
-            pf.setEchoChar(show ? (char) 0 : '*');
-        }
-
-        // Handle confirm password field
-        String confirmText = new String(cpf.getPassword());
-        if (!("Confirm Password".equals(confirmText) && cpf.getForeground().equals(java.awt.Color.GRAY))) {
-            cpf.setEchoChar(show ? (char) 0 : '*');
-        }
-    }
-
-    /**
      * Setup focus gain/lost placeholders for LoginForm fields.
      */
-    public void setupLoginPlaceholders(LoginForm view) {
-        setupPlaceholder(view.getUserTextField(), "Enter Username");
-        setupPasswordPlaceholder(view.getPasswordField(), "Enter Password");
+    private void setupLoginPlaceholders() {
+        setupPlaceholder(loginView.getUserTextField(), "Enter Username");
+        setupPasswordPlaceholder(loginView.getPasswordField(), "Enter Password");
     }
 
     /**
      * Setup focus gain/lost placeholders for SignupForm fields.
      */
-    public void setupSignupPlaceholders(SignupForm view) {
-        setupPlaceholder(view.getUserTextField(), "Enter Username");
-        setupPlaceholder(view.getEmailTextField(), "Enter Email");
-        setupPasswordPlaceholder(view.getPasswordField(), "Enter Password");
-        setupPasswordPlaceholder(view.getConfirmPasswordField(), "Confirm Password");
-        setupPlaceholder(view.getSecurityAnswerTextField(), "Enter Security Answer");
+    private void setupSignupPlaceholders() {
+        setupPlaceholder(signupView.getUserTextField(), "Enter Username");
+        setupPlaceholder(signupView.getEmailTextField(), "Enter Email");
+        setupPasswordPlaceholder(signupView.getPasswordField(), "Enter Password");
+        setupPasswordPlaceholder(signupView.getConfirmPasswordField(), "Confirm Password");
+        setupPlaceholder(signupView.getSecurityAnswerTextField(), "Enter Security Answer");
     }
 
     /**
      * Setup focus gain/lost placeholders for ForgotPasswordForm fields.
      */
-    public void setupForgotPasswordPlaceholders(ForgotPasswordForm view) {
-        setupPlaceholder(view.getUserTextField(), "Enter Username");
-        setupPlaceholder(view.getSecurityAnswerTextField(), "Enter Security Answer");
-        setupPasswordPlaceholder(view.getNewPasswordField(), "Enter New Password");
-        setupPasswordPlaceholder(view.getConfirmNewPasswordField(), "Confirm New Password");
+    private void setupForgotPasswordPlaceholders() {
+        setupPlaceholder(forgotView.getUserTextField(), "Enter Username");
+        setupPlaceholder(forgotView.getSecurityAnswerTextField(), "Enter Security Answer");
+        setupPasswordPlaceholder(forgotView.getNewPasswordField(), "Enter New Password");
+        setupPasswordPlaceholder(forgotView.getConfirmNewPasswordField(), "Confirm New Password");
     }
 
     /**
@@ -380,119 +575,5 @@ public class UserController {
                 }
             }
         });
-    }
-
-    /**
-     * Exits the entire application.
-     */
-    public void exitApplication() {
-        System.exit(0);
-    }
-    // ==================== Customer Management ====================
-
-    /**
-     * Loads all registered customers into the CustomerPanel's JTable.
-     * 
-     * @param view The CustomerPanel instance
-     */
-    public void loadCustomersTable(CustomerPanel view) {
-        DefaultTableModel model = (DefaultTableModel) view.getCustomersTable().getModel();
-        model.setRowCount(0); // Reset existing rows
-
-        java.util.List<User> customers = userDao.getAllCustomers();
-        for (User u : customers) {
-            model.addRow(new Object[]{
-                u.getId(),
-                u.getUsername(),
-                u.getEmail(),
-                u.getRole(),
-                u.getStatus()
-            });
-        }
-    }
-
-    /**
-     * Toggles the active status of the selected customer between Active and Suspended.
-     * 
-     * @param view The CustomerPanel instance
-     */
-    public void handleStatusToggle(CustomerPanel view) {
-        int selectedRow = view.getCustomersTable().getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int userId = (int) view.getCustomersTable().getValueAt(selectedRow, 0);
-        String username = view.getCustomersTable().getValueAt(selectedRow, 1).toString();
-        String currentStatus = view.getCustomersTable().getValueAt(selectedRow, 4).toString();
-
-        String newStatus = "Active".equals(currentStatus) ? "Suspended" : "Active";
-
-        boolean success = userDao.updateUserStatus(userId, newStatus);
-        if (success) {
-            JOptionPane.showMessageDialog(view, "Successfully updated status of customer '" + username + "' to " + newStatus + "!", "Status Updated", JOptionPane.INFORMATION_MESSAGE);
-            loadCustomersTable(view);
-            view.clearInputs();
-        } else {
-            JOptionPane.showMessageDialog(view, "Failed to update customer status due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Permanently deletes the selected customer account.
-     * 
-     * @param view The CustomerPanel instance
-     */
-    public void handleDeleteCustomer(CustomerPanel view) {
-        int selectedRow = view.getCustomersTable().getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a customer from the table first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int userId = (int) view.getCustomersTable().getValueAt(selectedRow, 0);
-        String username = view.getCustomersTable().getValueAt(selectedRow, 1).toString();
-
-        int confirm = JOptionPane.showConfirmDialog(view, 
-            "Are you sure you want to permanently delete customer '" + username + "'?\nThis action cannot be undone.", 
-            "Confirm Permanent Deletion", 
-            JOptionPane.YES_NO_OPTION, 
-            JOptionPane.WARNING_MESSAGE);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = userDao.deleteUser(userId);
-            if (success) {
-                JOptionPane.showMessageDialog(view, "Successfully deleted customer '" + username + "'!", "Customer Deleted", JOptionPane.INFORMATION_MESSAGE);
-                loadCustomersTable(view);
-                view.clearInputs();
-            } else {
-                JOptionPane.showMessageDialog(view, "Failed to delete customer due to a database error.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    /**
-     * Performs a real-time search and filter on customers by username or email.
-     * 
-     * @param view The CustomerPanel instance
-     */
-    public void handleSearchCustomer(CustomerPanel view) {
-        String query = view.getSearchField().getText().trim().toLowerCase();
-        DefaultTableModel model = (DefaultTableModel) view.getCustomersTable().getModel();
-        model.setRowCount(0);
-
-        java.util.List<User> customers = userDao.getAllCustomers();
-        for (User u : customers) {
-            if (u.getUsername().toLowerCase().contains(query) || u.getEmail().toLowerCase().contains(query)) {
-                model.addRow(new Object[]{
-                    u.getId(),
-                    u.getUsername(),
-                    u.getEmail(),
-                    u.getRole(),
-                    u.getStatus()
-                });
-            }
-        }
     }
 }
