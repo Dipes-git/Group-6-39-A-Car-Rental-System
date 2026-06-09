@@ -128,4 +128,262 @@ public class BookingDao {
             stmt.setString(1, status);
             stmt.setInt(2, bookingId);
             return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error updating booking status: " + e.getMessage());
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
+
+    /**
+     * Retrieves all bookings for the admin view.
+     */
+    public List<Booking> getAllBookings() {
+        List<Booking> list = new ArrayList<>();
+        String query = "SELECT b.*, u.username, br.name AS brand_name, c.model AS car_model, "
+                + "lp.city AS pickup_city, lp.address AS pickup_address, "
+                + "lr.city AS return_city, lr.address AS return_address "
+                + "FROM bookings b "
+                + "JOIN users u ON b.user_id = u.id "
+                + "JOIN cars c ON b.car_id = c.id "
+                + "JOIN brands br ON c.brand_id = br.id "
+                + "JOIN locations lp ON b.pickup_location_id = lp.id "
+                + "JOIN locations lr ON b.return_location_id = lr.id "
+                + "ORDER BY b.id DESC";
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    Booking b = mapRowToBooking(rs);
+                    list.add(b);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error retrieving all bookings: " + e.getMessage());
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return list;
+    }
+
+    /**
+     * Retrieves all bookings associated with a specific user.
+     */
+    public List<Booking> getBookingsByUser(int userId) {
+        List<Booking> list = new ArrayList<>();
+        String query = "SELECT b.*, u.username, br.name AS brand_name, c.model AS car_model, "
+                + "lp.city AS pickup_city, lp.address AS pickup_address, "
+                + "lr.city AS return_city, lr.address AS return_address "
+                + "FROM bookings b "
+                + "JOIN users u ON b.user_id = u.id "
+                + "JOIN cars c ON b.car_id = c.id "
+                + "JOIN brands br ON c.brand_id = br.id "
+                + "JOIN locations lp ON b.pickup_location_id = lp.id "
+                + "JOIN locations lr ON b.return_location_id = lr.id "
+                + "WHERE b.user_id = ? "
+                + "ORDER BY b.id DESC";
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, userId);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    Booking b = mapRowToBooking(rs);
+                    list.add(b);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error retrieving bookings by user: " + e.getMessage());
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return list;
+    }
+
+    /**
+     * Retrieves a single booking by ID.
+     */
+    public Booking getBookingById(int id) {
+        String query = "SELECT b.*, u.username, br.name AS brand_name, c.model AS car_model, "
+                + "lp.city AS pickup_city, lp.address AS pickup_address, "
+                + "lr.city AS return_city, lr.address AS return_address "
+                + "FROM bookings b "
+                + "JOIN users u ON b.user_id = u.id "
+                + "JOIN cars c ON b.car_id = c.id "
+                + "JOIN brands br ON c.brand_id = br.id "
+                + "JOIN locations lp ON b.pickup_location_id = lp.id "
+                + "JOIN locations lr ON b.return_location_id = lr.id "
+                + "WHERE b.id = ?";
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, id);
+                rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return mapRowToBooking(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error retrieving booking by ID: " + e.getMessage());
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return null;
+    }
+
+    private Booking mapRowToBooking(ResultSet rs) throws SQLException {
+        Booking b = new Booking();
+        b.setId(rs.getInt("id"));
+        b.setUserId(rs.getInt("user_id"));
+        b.setCarId(rs.getInt("car_id"));
+        b.setPickupLocationId(rs.getInt("pickup_location_id"));
+        b.setReturnLocationId(rs.getInt("return_location_id"));
+        b.setStartDate(rs.getDate("start_date"));
+        b.setEndDate(rs.getDate("end_date"));
+        b.setTotalPrice(rs.getDouble("total_price"));
+        b.setStatus(rs.getString("status"));
+        
+        b.setUsername(rs.getString("username"));
+        b.setCarDetails(rs.getString("brand_name") + " " + rs.getString("car_model"));
+        b.setPickupLocationName(rs.getString("pickup_city") + " (" + rs.getString("pickup_address") + ")");
+        b.setReturnLocationName(rs.getString("return_city") + " (" + rs.getString("return_address") + ")");
+        return b;
+    }
+
+    /**
+     * Updates an existing booking's records.
+     */
+    public boolean updateBooking(Booking booking) {
+        String query = "UPDATE bookings SET car_id = ?, pickup_location_id = ?, return_location_id = ?, start_date = ?, end_date = ?, total_price = ?, status = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return false;
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, booking.getCarId());
+            stmt.setInt(2, booking.getPickupLocationId());
+            stmt.setInt(3, booking.getReturnLocationId());
+            stmt.setDate(4, booking.getStartDate());
+            stmt.setDate(5, booking.getEndDate());
+            stmt.setDouble(6, booking.getTotalPrice());
+            stmt.setString(7, booking.getStatus());
+            stmt.setInt(8, booking.getId());
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error updating booking: " + e.getMessage());
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
+
+    /**
+     * Deletes a booking from the database.
+     */
+    public boolean deleteBooking(int id) {
+        String query = "DELETE FROM bookings WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return false;
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error deleting booking: " + e.getMessage());
+            return false;
+        } finally {
+            closeResources(conn, stmt, null);
+        }
+    }
+
+    /**
+     * Natively retrieves aggregated statistics for the Admin Dashboard summary cards.
+     * Keeps code strictly MVC aligned by executing SQL COUNT and SUM aggregates.
+     */
+    public model.DashboardMetrics getDashboardMetrics() {
+        int totalCars = 0;
+        int activeBookings = 0;
+        int pendingRequests = 0;
+        double totalEarnings = 0.0;
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn != null) {
+                // 1. Get total cars
+                String sqlCars = "SELECT COUNT(*) FROM cars";
+                try (PreparedStatement pst = conn.prepareStatement(sqlCars);
+                     ResultSet r = pst.executeQuery()) {
+                    if (r.next()) totalCars = r.getInt(1);
+                }
+
+                // 2. Get active bookings (Approved)
+                String sqlActive = "SELECT COUNT(*) FROM bookings WHERE status = 'Approved'";
+                try (PreparedStatement pst = conn.prepareStatement(sqlActive);
+                     ResultSet r = pst.executeQuery()) {
+                    if (r.next()) activeBookings = r.getInt(1);
+                }
+
+                // 3. Get pending requests
+                String sqlPending = "SELECT COUNT(*) FROM bookings WHERE status = 'Pending'";
+                try (PreparedStatement pst = conn.prepareStatement(sqlPending);
+                     ResultSet r = pst.executeQuery()) {
+                    if (r.next()) pendingRequests = r.getInt(1);
+                }
+
+                // 4. Get total earnings (Approved or Completed)
+                String sqlEarnings = "SELECT SUM(total_price) FROM bookings WHERE status = 'Approved' OR status = 'Completed'";
+                try (PreparedStatement pst = conn.prepareStatement(sqlEarnings);
+                     ResultSet r = pst.executeQuery()) {
+                    if (r.next()) totalEarnings = r.getDouble(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error loading dashboard metrics: " + e.getMessage());
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+
+        return new model.DashboardMetrics(totalCars, activeBookings, pendingRequests, totalEarnings);
+    }
+
+    private void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) connector.closeConnection(conn);
+        } catch (SQLException e) {
+            System.err.println("[BookingDao] Error closing resources: " + e.getMessage());
+        }
+    }
 }
+
