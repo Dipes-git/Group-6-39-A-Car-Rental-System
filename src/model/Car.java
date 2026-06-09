@@ -22,6 +22,7 @@ public class Car {
     private int passengers;  // Passenger count, e.g. 2, 4, 5, 7
     private String gearbox;  // Automatic, Manual
     private String features; // Comma-separated list of active accessories
+    private Integer locationId; // Maps to default branch location
 
     // Default Constructor
     public Car() {}
@@ -168,5 +169,13 @@ public class Car {
 
     public void setFeatures(String features) {
         this.features = features;
+    }
+
+    public Integer getLocationId() {
+        return locationId;
+    }
+
+    public void setLocationId(Integer locationId) {
+        this.locationId = locationId;
     }
 }
