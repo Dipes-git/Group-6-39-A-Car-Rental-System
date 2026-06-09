@@ -1,6 +1,4 @@
 package view;
-
-import controller.BrandController;
 import java.io.File;
 import java.awt.Image;
 import java.net.URL;
@@ -21,7 +19,6 @@ import javax.swing.JTextField;
  */
 public class BrandPanel extends javax.swing.JPanel {
 
-    private final BrandController brandController;
     private File selectedLogoFile;
     private boolean isAdminMode = true;
     
@@ -29,7 +26,6 @@ public class BrandPanel extends javax.swing.JPanel {
     private java.util.function.Consumer<String> onViewFleetCallback;
 
     public BrandPanel() {
-        brandController = new BrandController();
         initComponents();
         setupListeners();
         setAdminMode(true); // Default to admin mode on startup
@@ -75,19 +71,8 @@ public class BrandPanel extends javax.swing.JPanel {
     }
 
     private void setupListeners() {
-        // Load initial records
-        brandController.loadBrandTable(this);
-
-        // CRUD Button Actions
-        btnAddBrand.addActionListener(evt -> brandController.handleAddBrand(this));
-        btnUpdateBrand.addActionListener(evt -> brandController.handleUpdateBrand(this));
-        btnDeleteBrand.addActionListener(evt -> brandController.handleDeleteBrand(this));
-        btnRefreshBrand.addActionListener(evt -> {
-            brandController.loadBrandTable(this);
-            clearBrandInputs();
-        });
+        // Clear inputs triggers
         btnClearBrand.addActionListener(evt -> clearBrandInputs());
-        btnBrowseLogo.addActionListener(evt -> brandController.handleBrowseLogo(this));
 
         // Navigation Actions
         btnBrandFirst.addActionListener(evt -> selectBrandRow(0));
@@ -114,18 +99,12 @@ public class BrandPanel extends javax.swing.JPanel {
             }
         });
 
-        // Table List Selection Listener to update visual fields & logos
-        brandsTable.getSelectionModel().addListSelectionListener(evt -> {
-            if (!evt.getValueIsAdjusting()) {
-                int selectedRow = brandsTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    brandIdField.setText(brandsTable.getValueAt(selectedRow, 0).toString());
-                    brandNameField.setText(brandsTable.getValueAt(selectedRow, 1).toString());
-                    String logoPath = brandsTable.getValueAt(selectedRow, 2).toString();
-                    showLogoPreview(logoPath);
-                }
-            }
-        });
+    }
+
+    public void populateEditorFields(model.Brand brand) {
+        brandIdField.setText(String.valueOf(brand.getId()));
+        brandNameField.setText(brand.getName());
+        showLogoPreview(brand.getLogoPath());
     }
 
     public void selectBrandRow(int index) {
@@ -206,8 +185,40 @@ public class BrandPanel extends javax.swing.JPanel {
         return brandIdField.getText().trim();
     }
 
+    public java.util.function.Consumer<String> getOnViewFleetCallback() {
+        return onViewFleetCallback;
+    }
+
     public void setOnViewFleetCallback(java.util.function.Consumer<String> callback) {
         this.onViewFleetCallback = callback;
+    }
+
+    public javax.swing.JButton getBtnAddBrand() {
+        return btnAddBrand;
+    }
+
+    public javax.swing.JButton getBtnUpdateBrand() {
+        return btnUpdateBrand;
+    }
+
+    public javax.swing.JButton getBtnDeleteBrand() {
+        return btnDeleteBrand;
+    }
+
+    public javax.swing.JButton getBtnRefreshBrand() {
+        return btnRefreshBrand;
+    }
+
+    public javax.swing.JButton getBtnClearBrand() {
+        return btnClearBrand;
+    }
+
+    public javax.swing.JButton getBtnBrowseLogo() {
+        return btnBrowseLogo;
+    }
+
+    public javax.swing.JButton getBtnViewFleet() {
+        return btnViewFleet;
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

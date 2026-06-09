@@ -1,6 +1,4 @@
 package view;
-
-import controller.CarController;
 import model.Brand;
 import model.Car;
 import java.awt.CardLayout;
@@ -31,7 +29,6 @@ import javax.swing.SwingUtilities;
  */
 public class CarPanel extends javax.swing.JPanel {
 
-    private final CarController carController;
     private CardLayout cardLayout;
     private ButtonGroup gearboxGroup;
     private boolean isAdminMode = true;
@@ -40,7 +37,6 @@ public class CarPanel extends javax.swing.JPanel {
     private Runnable onBrandsTabRedirectCallback;
 
     public CarPanel() {
-        carController = new CarController();
         initComponents();
         setupComboBoxModels();
         scaleHeaderIcon();
@@ -130,27 +126,15 @@ public class CarPanel extends javax.swing.JPanel {
     private void setupListeners() {
         cardLayout = (CardLayout) cardPanel.getLayout();
 
-        // Load initial database list records
-        carController.loadAdminCarTable(this);
-
-        // Bind CRUD Button Actions
-        btnAdd.addActionListener(evt -> carController.handleAddCar(this));
-        btnUpdate.addActionListener(evt -> carController.handleUpdateCar(this));
-        btnDelete.addActionListener(evt -> carController.handleDeleteCar(this));
+        // Bind reset Action
         btnReset.addActionListener(evt -> clearCarInputs());
-        btnRent.addActionListener(evt -> carController.handleRentRequest(this));
 
-        // Search Action by ID
-        btnSearch.addActionListener(evt -> handleIdSearch());
-
-        // Navigation bottom tabs
+        // Navigation bottom tabs (pure UI card transitions)
         btnCarsList.addActionListener(evt -> {
-            // Toggle between form and list views
             String currentCard = getActiveCardName();
             if ("list".equals(currentCard)) {
                 cardLayout.show(cardPanel, "form");
             } else {
-                carController.loadAdminCarTable(this); // Reload fresh records
                 cardLayout.show(cardPanel, "list");
             }
         });
@@ -165,26 +149,67 @@ public class CarPanel extends javax.swing.JPanel {
         // Inner Card navigation buttons
         btnBackToForm.addActionListener(evt -> cardLayout.show(cardPanel, "form"));
         btnBackToFormImages.addActionListener(evt -> cardLayout.show(cardPanel, "form"));
+    }
 
-        // Table Selection Listener - Populate form and transition to Form view
-        carTable.getSelectionModel().addListSelectionListener(evt -> {
-            if (!evt.getValueIsAdjusting()) {
-                int selectedRow = carTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    try {
-                        int carId = Integer.parseInt(carTable.getValueAt(selectedRow, 0).toString());
-                        Car car = carController.getCarById(carId);
-                        if (car != null) {
-                            populateEditorFields(car);
-                            // Flip card back to form for direct editing
-                            cardLayout.show(cardPanel, "form");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("[CarPanel] Row selection mapping error: " + e.getMessage());
-                    }
-                }
-            }
-        });
+    // --- Inputs Getters/Setters for controllers ---
+    public javax.swing.JTextField getIdField() {
+        return idField;
+    }
+
+    public javax.swing.JTextField getModelField() {
+        return modelField;
+    }
+
+    public javax.swing.JTextField getPriceField() {
+        return priceField;
+    }
+
+    public javax.swing.JButton getBtnAdd() {
+        return btnAdd;
+    }
+
+    public javax.swing.JButton getBtnUpdate() {
+        return btnUpdate;
+    }
+
+    public javax.swing.JButton getBtnDelete() {
+        return btnDelete;
+    }
+
+    public javax.swing.JButton getBtnReset() {
+        return btnReset;
+    }
+
+    public javax.swing.JButton getBtnSearch() {
+        return btnSearch;
+    }
+
+    public javax.swing.JButton getBtnRent() {
+        return btnRent;
+    }
+
+    public javax.swing.JButton getBtnCarsList() {
+        return btnCarsList;
+    }
+
+    public javax.swing.JButton getBtnAddCarImages() {
+        return btnAddCarImages;
+    }
+
+    public javax.swing.JButton getBtnBrandsList() {
+        return btnBrandsList;
+    }
+
+    public java.awt.CardLayout getCardLayout() {
+        return cardLayout;
+    }
+
+    public javax.swing.JPanel getCardPanel() {
+        return cardPanel;
+    }
+
+    public Runnable getOnBrandsTabRedirectCallback() {
+        return onBrandsTabRedirectCallback;
     }
 
     private String getActiveCardName() {
@@ -199,39 +224,9 @@ public class CarPanel extends javax.swing.JPanel {
         return "form";
     }
 
-    private void handleIdSearch() {
-        String idText = idField.getText().trim();
-        if (idText.isEmpty() || "0".equals(idText)) {
-            String input = JOptionPane.showInputDialog(this, "Enter Car ID to Search:", "Search Car", JOptionPane.QUESTION_MESSAGE);
-            if (input != null && !input.trim().isEmpty()) {
-                try {
-                    int carId = Integer.parseInt(input.trim());
-                    Car car = carController.getCarById(carId);
-                    if (car != null) {
-                        populateEditorFields(car);
-                        JOptionPane.showMessageDialog(this, "Car record found and loaded!", "Search Success", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "No car found with ID: " + carId, "Record Not Found", JOptionPane.WARNING_MESSAGE);
-                    }
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Please enter a valid numeric integer ID.", "Search Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        } else {
-            // Already loaded ID
-            try {
-                int carId = Integer.parseInt(idText);
-                Car car = carController.getCarById(carId);
-                if (car != null) {
-                    populateEditorFields(car);
-                }
-            } catch (Exception e) {
-                clearCarInputs();
-            }
-        }
-    }
+    // Handled in Controller
 
-    private void populateEditorFields(Car car) {
+    public void populateEditorFields(Car car) {
         idField.setText(String.valueOf(car.getId()));
         modelField.setText(car.getModel());
         priceField.setText(String.valueOf(car.getPricePerDay()));

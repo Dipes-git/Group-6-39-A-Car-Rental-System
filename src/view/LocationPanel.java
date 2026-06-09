@@ -1,6 +1,4 @@
 package view;
-
-import controller.LocationController;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -27,10 +25,7 @@ import javax.swing.SpinnerNumberModel;
  */
 public class LocationPanel extends javax.swing.JPanel {
 
-    private final LocationController controller;
-
     public LocationPanel() {
-        controller = new LocationController();
         initComponents();
         styleComponents();
         setupListeners();
@@ -67,17 +62,6 @@ public class LocationPanel extends javax.swing.JPanel {
     }
 
     private void setupListeners() {
-        // Initial load
-        controller.loadLocationsTable(this);
-
-        // Actions
-        btnAdd.addActionListener(evt -> controller.handleAddLocation(this));
-        btnEdit.addActionListener(evt -> controller.handleEditLocation(this));
-        btnRemove.addActionListener(evt -> controller.handleRemoveLocation(this));
-        btnReresh.addActionListener(evt -> {
-            controller.loadLocationsTable(this);
-            clearInputs();
-        });
         btnClear.addActionListener(evt -> clearInputs());
 
         // Navigations
@@ -107,6 +91,22 @@ public class LocationPanel extends javax.swing.JPanel {
                 }
             }
         });
+    }
+
+    public javax.swing.JButton getBtnAdd() {
+        return btnAdd;
+    }
+
+    public javax.swing.JButton getBtnEdit() {
+        return btnEdit;
+    }
+
+    public javax.swing.JButton getBtnRemove() {
+        return btnRemove;
+    }
+
+    public javax.swing.JButton getBtnReresh() {
+        return btnReresh;
     }
 
     public void selectRow(int index) {

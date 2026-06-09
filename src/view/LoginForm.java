@@ -2,25 +2,22 @@
 
 package view;
 
-import controller.UserController;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 
 /**
  * Visual Form for User Login.
- * Contains only UI components and delegates all logic to UserController.
+ * Contains only UI components.
  * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class LoginForm extends javax.swing.JFrame {
 
-    private final UserController controller;
-
     public LoginForm() {
-        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
-        controller.setupLoginPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -162,30 +159,63 @@ public class LoginForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void closeLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeLabelMouseClicked
-        controller.exitApplication();
+        // Handled in Controller
     }//GEN-LAST:event_closeLabelMouseClicked
 
     private void showPasswordCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPasswordCheckboxActionPerformed
-        controller.toggleLoginPasswordVisibility(this);
+        // Handled in Controller
     }//GEN-LAST:event_showPasswordCheckboxActionPerformed
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        controller.handleLogin(this);
+        // Handled in Controller
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void forgotPasswordLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_forgotPasswordLabelMouseClicked
-        controller.navigateToForgotPassword(this);
+        // Handled in Controller
     }//GEN-LAST:event_forgotPasswordLabelMouseClicked
 
     private void signupLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_signupLabelMouseClicked
-        controller.navigateToSignup(this);
+        // Handled in Controller
     }//GEN-LAST:event_signupLabelMouseClicked
 
     private void userTextFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_userTextFieldFocusGained
         // TODO add your handling code here:
     }//GEN-LAST:event_userTextFieldFocusGained
 
+    // --- Listener Hooks for Controller ---
+    public void addCloseListener(MouseListener listener) {
+        closeLabel.addMouseListener(listener);
+    }
+
+    public void addShowPasswordListener(ActionListener listener) {
+        showPasswordCheckbox.addActionListener(listener);
+    }
+
+    public void addLoginListener(ActionListener listener) {
+        loginButton.addActionListener(listener);
+    }
+
+    public void addForgotPasswordListener(MouseListener listener) {
+        forgotPasswordLabel.addMouseListener(listener);
+    }
+
+    public void addSignupListener(MouseListener listener) {
+        signupLabel.addMouseListener(listener);
+    }
+
     // --- Public Getters (for Controller to read UI data) ---
+
+    public javax.swing.JLabel getForgotPasswordLabel() {
+        return forgotPasswordLabel;
+    }
+
+    public javax.swing.JLabel getSignupLabel() {
+        return signupLabel;
+    }
+
+    public javax.swing.JLabel getCloseLabel() {
+        return closeLabel;
+    }
 
     public String getUsername() {
         String text = userTextField.getText().trim();

@@ -1,25 +1,19 @@
 package view;
 
-import controller.UserController;
-import controller.CarController;
 import java.io.File;
 
 /**
  * Admin Dashboard - Landing page for users with the "admin" role.
- * Contains only UI components and delegates all logic to UserController and CarController.
+ * Contains only UI components.
  * Upgraded to modularly embed view.CarPanel for premium fleet visual management.
  * 
  * @author dipes
  */
 public class AdminDashboard extends javax.swing.JFrame {
 
-    private final UserController controller;
-    private final CarController carController;
     private java.awt.CardLayout cardLayout;
 
     public AdminDashboard() {
-        controller = new UserController();
-        carController = new CarController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -37,14 +31,6 @@ public class AdminDashboard extends javax.swing.JFrame {
         // Configure modular components modes
         brandPanel.setAdminMode(true);
         carPanel.setAdminMode(true);
-        
-        // Load options and callbacks
-        carController.populateBrandCombo(carPanel);
-        
-        // Tab redirect callbacks on modular visual tabs
-        carPanel.setOnBrandsTabRedirect(() -> {
-            controller.handleAdminTabChanged(this, "brands");
-        });
     }
 
     private void styleSidebarButton(javax.swing.JButton button) {
@@ -126,10 +112,7 @@ public class AdminDashboard extends javax.swing.JFrame {
         carPanel = new view.CarPanel();
         customerPanel = new view.CustomerPanel();
         locationsPanel = new view.LocationPanel();
-        bookingsPanel = new javax.swing.JPanel();
-        bookTitle = new javax.swing.JLabel();
-        bookLabel = new javax.swing.JLabel();
-        bookingsBgLabel = new javax.swing.JLabel();
+        bookingPanel = new view.BookingPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setUndecorated(true);
@@ -368,26 +351,7 @@ public class AdminDashboard extends javax.swing.JFrame {
 
         contentPanel.add(locationsPanel, "locations");
 
-        bookingsPanel.setBackground(new java.awt.Color(45, 45, 45));
-        bookingsPanel.setLayout(null);
-
-        bookTitle.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        bookTitle.setForeground(new java.awt.Color(255, 255, 255));
-        bookTitle.setText("Manage Bookings");
-        bookingsPanel.add(bookTitle);
-        bookTitle.setBounds(30, 20, 300, 35);
-
-        bookLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        bookLabel.setForeground(new java.awt.Color(180, 180, 180));
-        bookLabel.setText("Booking approval queue and rental status tables will go here in Sprint 4.");
-        bookingsPanel.add(bookLabel);
-        bookLabel.setBounds(30, 80, 500, 30);
-
-        bookingsBgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admin_bg.png"))); // NOI18N
-        bookingsPanel.add(bookingsBgLabel);
-        bookingsBgLabel.setBounds(0, 0, 600, 520);
-
-        contentPanel.add(bookingsPanel, "bookings");
+        contentPanel.add(bookingPanel, "bookings");
 
         mainPanel.add(contentPanel);
         contentPanel.setBounds(200, 80, 600, 520);
@@ -400,35 +364,67 @@ public class AdminDashboard extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void logoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutButtonActionPerformed
-        controller.handleLogout(this);
+        // Handled in Controller
     }//GEN-LAST:event_logoutButtonActionPerformed
 
     private void overviewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_overviewButtonActionPerformed
-        controller.handleAdminTabChanged(this, "overview");
+        showPanel("overview");
     }//GEN-LAST:event_overviewButtonActionPerformed
 
     private void carsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_carsButtonActionPerformed
-        controller.handleAdminTabChanged(this, "cars");
+        showPanel("cars");
     }//GEN-LAST:event_carsButtonActionPerformed
 
     private void locationsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_locationsButtonActionPerformed
-        controller.handleAdminTabChanged(this, "locations");
+        showPanel("locations");
     }//GEN-LAST:event_locationsButtonActionPerformed
 
     private void brandsButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        controller.handleAdminTabChanged(this, "brands");
+        showPanel("brands");
     }
 
     private void bookingsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bookingsButtonActionPerformed
-        controller.handleAdminTabChanged(this, "bookings");
+        showPanel("bookings");
     }//GEN-LAST:event_bookingsButtonActionPerformed
 
     private void customersButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        controller.handleAdminTabChanged(this, "customers");
+        showPanel("customers");
+    }
+
+    // --- Accessors for sub-panels and listener wiring ---
+    public view.CustomerPanel getCustomerPanel() {
+        return customerPanel;
+    }
+
+    public view.LocationPanel getLocationsPanel() {
+        return locationsPanel;
+    }
+
+    public view.BrandPanel getBrandPanel() {
+        return brandPanel;
+    }
+
+    public javax.swing.JButton getLogoutButton() {
+        return logoutButton;
+    }
+
+    public void addLogoutListener(java.awt.event.ActionListener listener) {
+        logoutButton.addActionListener(listener);
+    }
+
+    public view.BookingPanel getBookingPanel() {
+        return bookingPanel;
     }
 
     public void setWelcomeText(String text) {
         welcomeLabel.setText(text);
+    }
+
+    public void setSystemSummary(model.DashboardMetrics metrics) {
+        carsVal.setText(String.valueOf(metrics.getTotalCars()));
+        activeVal.setText(String.valueOf(metrics.getActiveBookings()));
+        pendingVal.setText(String.valueOf(metrics.getPendingRequests()));
+        earningsVal.setText(String.format("$%.2f", metrics.getTotalEarnings()));
     }
 
     public void showPanel(String name) {
@@ -448,11 +444,8 @@ public class AdminDashboard extends javax.swing.JFrame {
     private javax.swing.JLabel activeTitle;
     private javax.swing.JLabel activeVal;
     private javax.swing.JLabel bgLabel;
-    private javax.swing.JLabel bookLabel;
-    private javax.swing.JLabel bookTitle;
-    private javax.swing.JLabel bookingsBgLabel;
     private javax.swing.JButton bookingsButton;
-    private javax.swing.JPanel bookingsPanel;
+    private view.BookingPanel bookingPanel;
     private view.BrandPanel brandPanel;
     private view.CarPanel carPanel;
     private view.CustomerPanel customerPanel;

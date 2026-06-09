@@ -1,25 +1,18 @@
 package view;
 
-import controller.UserController;
-import controller.CarController;
-
 /**
  * User Dashboard - Landing page for users with the "user" role.
- * Contains only UI components and delegates all logic to UserController and CarController.
+ * Contains only UI components.
  * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class UserDashboard extends javax.swing.JFrame {
 
-    private final UserController controller;
-    private final CarController carController;
     private java.awt.CardLayout cardLayout;
 
 
     public UserDashboard() {
-        controller = new UserController();
-        carController = new CarController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -32,43 +25,8 @@ public class UserDashboard extends javax.swing.JFrame {
         
         // Configure nested CarPanel in Customer mode
         carPanel.setAdminMode(false);
-        carController.populateBrandCombo(carPanel);
-        
-        setupDashboardPanels();
-        setupCatalogListeners();
-        setupBrandBrowsing();
-    }
-
-    private void styleSidebarButton(javax.swing.JButton button) {
-        button.setBackground(new java.awt.Color(40, 40, 40));
-        button.setForeground(java.awt.Color.WHITE);
-        button.setContentAreaFilled(false);
-        button.setOpaque(true);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-    }
-
-    private void setupDashboardPanels() {
-        cardLayout = (java.awt.CardLayout) contentPanel.getLayout();
-        showPanel("home");
-    }
-
-    private void setupCatalogListeners() {
-        // Load initial catalog data into modular CarPanel
-        carController.loadAdminCarTable(carPanel);
-    }
-
-    private void setupBrandBrowsing() {
         brandPanel.setAdminMode(false);
-        brandPanel.setOnViewFleetCallback(brandName -> {
-            // Load available fleet filtered by selected brand name
-            carController.loadAdminCarTable(carPanel, brandName);
-            // Redirect view to "browse" tab
-            showPanel("browse");
-        });
-        
-        // Let the nested CarPanel brands tab trigger redirect to Brands sidebar category
-        carPanel.setOnBrandsTabRedirect(() -> showPanel("brands"));
+        setupDashboardPanels();
     }
 
 
@@ -107,10 +65,7 @@ public class UserDashboard extends javax.swing.JFrame {
         tipText2 = new javax.swing.JLabel();
         homeBgLabel = new javax.swing.JLabel();
         carPanel = new view.CarPanel();
-        bookingsPanel = new javax.swing.JPanel();
-        bookTitle = new javax.swing.JLabel();
-        bookLabel = new javax.swing.JLabel();
-        bookingsBgLabel = new javax.swing.JLabel();
+        bookingPanel = new view.BookingPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setUndecorated(true);
@@ -338,26 +293,7 @@ public class UserDashboard extends javax.swing.JFrame {
 
         contentPanel.add(carPanel, "browse");
 
-        bookingsPanel.setBackground(new java.awt.Color(45, 45, 45));
-        bookingsPanel.setLayout(null);
-
-        bookTitle.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        bookTitle.setForeground(new java.awt.Color(255, 255, 255));
-        bookTitle.setText("My Rental History");
-        bookingsPanel.add(bookTitle);
-        bookTitle.setBounds(30, 20, 300, 35);
-
-        bookLabel.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        bookLabel.setForeground(new java.awt.Color(180, 180, 180));
-        bookLabel.setText("Your active bookings status JTable and past rental history will go here in Sprint 4.");
-        bookingsPanel.add(bookLabel);
-        bookLabel.setBounds(30, 80, 520, 30);
-
-        bookingsBgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/user_bg.png"))); // NOI18N
-        bookingsPanel.add(bookingsBgLabel);
-        bookingsBgLabel.setBounds(0, 0, 600, 520);
-
-        contentPanel.add(bookingsPanel, "bookings");
+        contentPanel.add(bookingPanel, "bookings");
 
         brandPanel = new view.BrandPanel();
         contentPanel.add(brandPanel, "brands");
@@ -373,29 +309,70 @@ public class UserDashboard extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void logoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutButtonActionPerformed
-        controller.handleLogout(this);
+        // Handled in Controller
     }//GEN-LAST:event_logoutButtonActionPerformed
 
     private void homeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homeButtonActionPerformed
-        controller.handleUserTabChanged(this, "home");
+        showPanel("home");
     }//GEN-LAST:event_homeButtonActionPerformed
 
     private void brandsButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        controller.handleUserTabChanged(this, "brands");
+        showPanel("brands");
     }
 
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
-        controller.handleUserTabChanged(this, "browse");
+        showPanel("browse");
     }//GEN-LAST:event_browseButtonActionPerformed
 
     private void bookingsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bookingsButtonActionPerformed
-        controller.handleUserTabChanged(this, "bookings");
+        showPanel("bookings");
     }//GEN-LAST:event_bookingsButtonActionPerformed
+
+    // --- Accessors for sub-panels and listener wiring ---
+    public view.CarPanel getCarPanel() {
+        return carPanel;
+    }
+
+    public view.BrandPanel getBrandPanel() {
+        return brandPanel;
+    }
+
+    public javax.swing.JButton getLogoutButton() {
+        return logoutButton;
+    }
+
+    public void addLogoutListener(java.awt.event.ActionListener listener) {
+        logoutButton.addActionListener(listener);
+    }
+
+    public view.BookingPanel getBookingPanel() {
+        return bookingPanel;
+    }
+
+    private void styleSidebarButton(javax.swing.JButton button) {
+        button.setBackground(new java.awt.Color(40, 40, 40));
+        button.setForeground(java.awt.Color.WHITE);
+        button.setContentAreaFilled(false);
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+    }
+
+    private void setupDashboardPanels() {
+        cardLayout = (java.awt.CardLayout) contentPanel.getLayout();
+        showPanel("home");
+    }
 
     // --- Public Setters (for Controller to update UI) ---
 
     public void setWelcomeText(String text) {
         welcomeLabel.setText(text);
+    }
+
+    public void setActivitySummary(int activeCount, int pendingCount, int totalDays) {
+        rentalsVal.setText(activeCount + " Active");
+        pendingVal.setText(pendingCount + " Pending");
+        daysVal.setText(totalDays + " Day(s)");
     }
 
     public void showPanel(String name) {
@@ -412,11 +389,8 @@ public class UserDashboard extends javax.swing.JFrame {
     private javax.swing.JPanel banner;
     private javax.swing.JLabel bannerSub;
     private javax.swing.JLabel bannerTitle;
-    private javax.swing.JLabel bookLabel;
-    private javax.swing.JLabel bookTitle;
     private javax.swing.JButton bookingsButton;
-    private javax.swing.JLabel bookingsBgLabel;
-    private javax.swing.JPanel bookingsPanel;
+    private view.BookingPanel bookingPanel;
     private javax.swing.JButton browseButton;
     private javax.swing.JPanel contentPanel;
     private javax.swing.JPanel daysCard;

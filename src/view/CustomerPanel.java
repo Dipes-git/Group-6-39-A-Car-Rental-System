@@ -1,6 +1,4 @@
 package view;
-
-import controller.UserController;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -18,25 +16,13 @@ import javax.swing.JTextField;
  */
 public class CustomerPanel extends javax.swing.JPanel {
 
-    private final UserController userController;
-
     public CustomerPanel() {
-        userController = new UserController();
         initComponents();
         setupListeners();
     }
 
     private void setupListeners() {
-        // Load initial records
-        userController.loadCustomersTable(this);
-
-        // Actions
-        btnToggleStatus.addActionListener(evt -> userController.handleStatusToggle(this));
-        btnDeleteCustomer.addActionListener(evt -> userController.handleDeleteCustomer(this));
-        btnRefresh.addActionListener(evt -> {
-            userController.loadCustomersTable(this);
-            clearInputs();
-        });
+        // Clear Action
         btnClear.addActionListener(evt -> clearInputs());
 
         // Navigation
@@ -52,14 +38,6 @@ public class CustomerPanel extends javax.swing.JPanel {
             int current = customersTable.getSelectedRow();
             if (current > 0) {
                 selectRow(current - 1);
-            }
-        });
-
-        // Search Filter (real-time key releases)
-        searchField.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                userController.handleSearchCustomer(CustomerPanel.this);
             }
         });
 
@@ -91,7 +69,6 @@ public class CustomerPanel extends javax.swing.JPanel {
         statusField.setText("");
         searchField.setText("");
         customersTable.clearSelection();
-        userController.loadCustomersTable(this);
     }
 
     // --- Public Getters/Setters for UserController ---
@@ -144,7 +121,6 @@ public class CustomerPanel extends javax.swing.JPanel {
         searchLabel = new javax.swing.JLabel();
         searchField = new javax.swing.JTextField();
         customersScrollPane = new javax.swing.JScrollPane();
-        customersTable = new javax.swing.JTable();
         userIdLabel = new javax.swing.JLabel();
         userIdField = new javax.swing.JTextField();
         usernameLabel = new javax.swing.JLabel();
@@ -173,16 +149,16 @@ public class CustomerPanel extends javax.swing.JPanel {
         customersManageTitle.setBounds(30, 20, 300, 35);
 
         searchLabel.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        searchLabel.setForeground(java.awt.Color.WHITE);
+        searchLabel.setForeground(new java.awt.Color(255, 255, 255));
         searchLabel.setText("Search:");
         add(searchLabel);
         searchLabel.setBounds(320, 25, 50, 25);
 
-        searchField.setBackground(new java.awt.Color(255, 255, 255));
         searchField.setFont(new java.awt.Font("Segoe UI", 0, 13)); // NOI18N
         add(searchField);
         searchField.setBounds(380, 25, 190, 25);
 
+        customersTable = new javax.swing.JTable();
         customersTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {},
             new String [] {
@@ -196,23 +172,33 @@ public class CustomerPanel extends javax.swing.JPanel {
                 false, false, false, false, false
             };
 
-            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
+
+        // Apply Premium Dark styling
+        customersTable.setBackground(new java.awt.Color(50, 50, 50));
+        customersTable.setForeground(java.awt.Color.WHITE);
+        customersTable.setGridColor(new java.awt.Color(70, 70, 70));
+        customersTable.setSelectionBackground(new java.awt.Color(0, 102, 153));
+        customersTable.setSelectionForeground(java.awt.Color.WHITE);
+        customersTable.setRowHeight(25);
+        customersTable.getTableHeader().setBackground(new java.awt.Color(74, 83, 97));
+        customersTable.getTableHeader().setForeground(java.awt.Color.WHITE);
+        customersTable.getTableHeader().setFont(new java.awt.Font("Segoe UI", 1, 12));
+
         customersScrollPane.setViewportView(customersTable);
 
         add(customersScrollPane);
         customersScrollPane.setBounds(30, 80, 540, 220);
 
         userIdLabel.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        userIdLabel.setForeground(java.awt.Color.WHITE);
+        userIdLabel.setForeground(new java.awt.Color(255, 255, 255));
         userIdLabel.setText("ID:");
         add(userIdLabel);
         userIdLabel.setBounds(30, 320, 50, 25);
@@ -225,7 +211,7 @@ public class CustomerPanel extends javax.swing.JPanel {
         userIdField.setBounds(90, 320, 80, 25);
 
         usernameLabel.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        usernameLabel.setForeground(java.awt.Color.WHITE);
+        usernameLabel.setForeground(new java.awt.Color(255, 255, 255));
         usernameLabel.setText("Username:");
         add(usernameLabel);
         usernameLabel.setBounds(190, 320, 80, 25);
@@ -238,7 +224,7 @@ public class CustomerPanel extends javax.swing.JPanel {
         usernameField.setBounds(270, 320, 110, 25);
 
         emailLabel.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        emailLabel.setForeground(java.awt.Color.WHITE);
+        emailLabel.setForeground(new java.awt.Color(255, 255, 255));
         emailLabel.setText("Email:");
         add(emailLabel);
         emailLabel.setBounds(30, 360, 50, 25);
@@ -251,7 +237,7 @@ public class CustomerPanel extends javax.swing.JPanel {
         emailField.setBounds(90, 360, 290, 25);
 
         statusLabel.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        statusLabel.setForeground(java.awt.Color.WHITE);
+        statusLabel.setForeground(new java.awt.Color(255, 255, 255));
         statusLabel.setText("Status:");
         add(statusLabel);
         statusLabel.setBounds(30, 400, 50, 25);
@@ -265,7 +251,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnFirst.setBackground(new java.awt.Color(80, 80, 80));
         btnFirst.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        btnFirst.setForeground(java.awt.Color.WHITE);
+        btnFirst.setForeground(new java.awt.Color(255, 255, 255));
         btnFirst.setText("<<");
         btnFirst.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnFirst);
@@ -273,7 +259,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnPrev.setBackground(new java.awt.Color(80, 80, 80));
         btnPrev.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        btnPrev.setForeground(java.awt.Color.WHITE);
+        btnPrev.setForeground(new java.awt.Color(255, 255, 255));
         btnPrev.setText("<");
         btnPrev.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnPrev);
@@ -281,7 +267,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnNext.setBackground(new java.awt.Color(80, 80, 80));
         btnNext.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        btnNext.setForeground(java.awt.Color.WHITE);
+        btnNext.setForeground(new java.awt.Color(255, 255, 255));
         btnNext.setText(">");
         btnNext.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnNext);
@@ -289,7 +275,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnLast.setBackground(new java.awt.Color(80, 80, 80));
         btnLast.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        btnLast.setForeground(java.awt.Color.WHITE);
+        btnLast.setForeground(new java.awt.Color(255, 255, 255));
         btnLast.setText(">>");
         btnLast.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnLast);
@@ -297,7 +283,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnToggleStatus.setBackground(new java.awt.Color(0, 153, 102));
         btnToggleStatus.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        btnToggleStatus.setForeground(java.awt.Color.WHITE);
+        btnToggleStatus.setForeground(new java.awt.Color(255, 255, 255));
         btnToggleStatus.setText("Toggle Active Status");
         btnToggleStatus.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnToggleStatus);
@@ -305,7 +291,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnDeleteCustomer.setBackground(new java.awt.Color(237, 40, 54));
         btnDeleteCustomer.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        btnDeleteCustomer.setForeground(java.awt.Color.WHITE);
+        btnDeleteCustomer.setForeground(new java.awt.Color(255, 255, 255));
         btnDeleteCustomer.setText("Delete Customer");
         btnDeleteCustomer.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnDeleteCustomer);
@@ -313,7 +299,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnRefresh.setBackground(new java.awt.Color(80, 80, 80));
         btnRefresh.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        btnRefresh.setForeground(java.awt.Color.WHITE);
+        btnRefresh.setForeground(new java.awt.Color(255, 255, 255));
         btnRefresh.setText("Refresh");
         btnRefresh.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnRefresh);
@@ -321,7 +307,7 @@ public class CustomerPanel extends javax.swing.JPanel {
 
         btnClear.setBackground(new java.awt.Color(120, 120, 120));
         btnClear.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
-        btnClear.setForeground(java.awt.Color.WHITE);
+        btnClear.setForeground(new java.awt.Color(255, 255, 255));
         btnClear.setText("Clear");
         btnClear.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         add(btnClear);

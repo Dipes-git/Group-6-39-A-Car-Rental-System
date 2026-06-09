@@ -1,24 +1,21 @@
 package view;
 
-import controller.UserController;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 
 /**
  * Visual Form for User Account Registration.
- * Contains only UI components and delegates all logic to UserController.
+ * Contains only UI components.
  * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class SignupForm extends javax.swing.JFrame {
 
-    private final UserController controller;
-
     public SignupForm() {
-        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
-        controller.setupSignupPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -180,16 +177,29 @@ public class SignupForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void showPasswordCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPasswordCheckboxActionPerformed
-        controller.toggleSignupPasswordVisibility(this);
+        // Handled in Controller
     }//GEN-LAST:event_showPasswordCheckboxActionPerformed
 
     private void registerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerButtonActionPerformed
-        controller.handleSignup(this);
+        // Handled in Controller
     }//GEN-LAST:event_registerButtonActionPerformed
 
     private void loginLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginLabelMouseClicked
-        controller.navigateToLogin(this);
+        // Handled in Controller
     }//GEN-LAST:event_loginLabelMouseClicked
+
+    // --- Listener Hooks for Controller ---
+    public void addShowPasswordListener(ActionListener listener) {
+        showPasswordCheckbox.addActionListener(listener);
+    }
+
+    public void addRegisterListener(ActionListener listener) {
+        registerButton.addActionListener(listener);
+    }
+
+    public void addLoginLabelListener(MouseListener listener) {
+        loginLabel.addMouseListener(listener);
+    }
 
     // --- Public Getters (for Controller to read UI data) ---
 

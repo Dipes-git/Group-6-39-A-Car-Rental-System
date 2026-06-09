@@ -1,24 +1,21 @@
 package view;
 
-import controller.UserController;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 
 /**
  * Visual Form for Password Recovery utilizing Security Questions.
- * Contains only UI components and delegates all logic to UserController.
+ * Contains only UI components.
  * No business logic, data extraction, or navigation resides in this class.
  * 
  * @author dipes
  */
 public class ForgotPasswordForm extends javax.swing.JFrame {
 
-    private final UserController controller;
-
     public ForgotPasswordForm() {
-        controller = new UserController();
         initComponents();
         setSize(800, 600);
         setLocationRelativeTo(null);
-        controller.setupForgotPasswordPlaceholders(this);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -182,20 +179,37 @@ public class ForgotPasswordForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void closeLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeLabelMouseClicked
-        controller.exitApplication();
+        // Handled in Controller
     }//GEN-LAST:event_closeLabelMouseClicked
 
     private void backToLoginLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_backToLoginLabelMouseClicked
-        controller.navigateToLogin(this);
+        // Handled in Controller
     }//GEN-LAST:event_backToLoginLabelMouseClicked
 
     private void fetchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fetchButtonActionPerformed
-        controller.handleFetchQuestion(this);
+        // Handled in Controller
     }//GEN-LAST:event_fetchButtonActionPerformed
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
-        controller.handleResetPassword(this);
+        // Handled in Controller
     }//GEN-LAST:event_resetButtonActionPerformed
+
+    // --- Listener Hooks for Controller ---
+    public void addCloseListener(MouseListener listener) {
+        closeLabel.addMouseListener(listener);
+    }
+
+    public void addBackToLoginListener(MouseListener listener) {
+        backToLoginLabel.addMouseListener(listener);
+    }
+
+    public void addFetchListener(ActionListener listener) {
+        fetchButton.addActionListener(listener);
+    }
+
+    public void addResetListener(ActionListener listener) {
+        resetButton.addActionListener(listener);
+    }
 
     // --- Public Getters (for Controller to read UI data) ---
 
