@@ -16,7 +16,8 @@ public class MySqlConnector implements Db {
             return DriverManager.getConnection(url, username, password);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
+            System.err.println("Database connection failed: " + e.getMessage());
+            return null;
         } catch (ClassNotFoundException ex) {
             System.getLogger(MySqlConnector.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
