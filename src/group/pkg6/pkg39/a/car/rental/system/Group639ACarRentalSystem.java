@@ -4,6 +4,7 @@
  */
 package group.pkg6.pkg39.a.car.rental.system;
 
+import controller.UserController;
 import view.LoginForm;
 
 /**
@@ -17,7 +18,9 @@ public class Group639ACarRentalSystem {
      */
     public static void main(String[] args) {
         java.awt.EventQueue.invokeLater(() -> {
-            new LoginForm().setVisible(true);
+            LoginForm loginForm = new LoginForm();
+            new UserController(loginForm);
+            loginForm.setVisible(true);
         });
     }
     
