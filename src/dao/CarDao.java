@@ -41,6 +41,19 @@ public class CarDao {
                 addColumnIfMissing(conn, "passengers", "INT DEFAULT 5");
                 addColumnIfMissing(conn, "gearbox", "VARCHAR(50) DEFAULT 'Automatic'");
                 addColumnIfMissing(conn, "features", "VARCHAR(500) DEFAULT ''");
+                addColumnIfMissing(conn, "location_id", "INT DEFAULT NULL");
+                
+                // Add foreign key constraint if missing
+                try {
+                    String fkQuery = "ALTER TABLE cars ADD CONSTRAINT fk_cars_location FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL";
+                    try (PreparedStatement stmt = conn.prepareStatement(fkQuery)) {
+                        stmt.executeUpdate();
+                        System.out.println("[CarDao] Successfully added foreign key constraint fk_cars_location");
+                    }
+                } catch (SQLException e) {
+                    // Safe to ignore if already exists
+                    System.out.println("[CarDao] Constraint verification notice: " + e.getMessage());
+                }
             }
         } catch (Exception e) {
             System.err.println("[CarDao] Self-healing DB check encountered an error: " + e.getMessage());
@@ -76,7 +89,7 @@ public class CarDao {
      * Adds a new car to the fleet.
      */
     public boolean addCar(Car car) {
-        String query = "INSERT INTO cars (brand_id, model, category, price_per_day, status, fuel, color, passengers, gearbox, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO cars (brand_id, location_id, model, category, price_per_day, status, fuel, color, passengers, gearbox, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -88,15 +101,20 @@ public class CarDao {
             }
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, car.getBrandId());
-            stmt.setString(2, car.getModel());
-            stmt.setString(3, car.getCategory());
-            stmt.setDouble(4, car.getPricePerDay());
-            stmt.setString(5, car.getStatus());
-            stmt.setString(6, car.getFuel());
-            stmt.setString(7, car.getColor());
-            stmt.setInt(8, car.getPassengers());
-            stmt.setString(9, car.getGearbox());
-            stmt.setString(10, car.getFeatures());
+            if (car.getLocationId() != null) {
+                stmt.setInt(2, car.getLocationId());
+            } else {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+            }
+            stmt.setString(3, car.getModel());
+            stmt.setString(4, car.getCategory());
+            stmt.setDouble(5, car.getPricePerDay());
+            stmt.setString(6, car.getStatus());
+            stmt.setString(7, car.getFuel());
+            stmt.setString(8, car.getColor());
+            stmt.setInt(9, car.getPassengers());
+            stmt.setString(10, car.getGearbox());
+            stmt.setString(11, car.getFeatures());
 
             int rowsInserted = stmt.executeUpdate();
             return rowsInserted > 0;
@@ -114,7 +132,7 @@ public class CarDao {
      * Updates an existing car record in the database.
      */
     public boolean updateCar(Car car) {
-        String query = "UPDATE cars SET brand_id = ?, model = ?, category = ?, price_per_day = ?, status = ?, fuel = ?, color = ?, passengers = ?, gearbox = ?, features = ? WHERE id = ?";
+        String query = "UPDATE cars SET brand_id = ?, location_id = ?, model = ?, category = ?, price_per_day = ?, status = ?, fuel = ?, color = ?, passengers = ?, gearbox = ?, features = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -126,16 +144,21 @@ public class CarDao {
             }
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, car.getBrandId());
-            stmt.setString(2, car.getModel());
-            stmt.setString(3, car.getCategory());
-            stmt.setDouble(4, car.getPricePerDay());
-            stmt.setString(5, car.getStatus());
-            stmt.setString(6, car.getFuel());
-            stmt.setString(7, car.getColor());
-            stmt.setInt(8, car.getPassengers());
-            stmt.setString(9, car.getGearbox());
-            stmt.setString(10, car.getFeatures());
-            stmt.setInt(11, car.getId());
+            if (car.getLocationId() != null) {
+                stmt.setInt(2, car.getLocationId());
+            } else {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+            }
+            stmt.setString(3, car.getModel());
+            stmt.setString(4, car.getCategory());
+            stmt.setDouble(5, car.getPricePerDay());
+            stmt.setString(6, car.getStatus());
+            stmt.setString(7, car.getFuel());
+            stmt.setString(8, car.getColor());
+            stmt.setInt(9, car.getPassengers());
+            stmt.setString(10, car.getGearbox());
+            stmt.setString(11, car.getFeatures());
+            stmt.setInt(12, car.getId());
 
             int rowsUpdated = stmt.executeUpdate();
             return rowsUpdated > 0;
@@ -211,6 +234,7 @@ public class CarDao {
                 car.setPassengers(rs.getInt("passengers"));
                 car.setGearbox(rs.getString("gearbox"));
                 car.setFeatures(rs.getString("features"));
+                car.setLocationId(rs.getObject("location_id") != null ? rs.getInt("location_id") : null);
                 return car;
             }
 
@@ -256,6 +280,7 @@ public class CarDao {
                 car.setPassengers(rs.getInt("passengers"));
                 car.setGearbox(rs.getString("gearbox"));
                 car.setFeatures(rs.getString("features"));
+                car.setLocationId(rs.getObject("location_id") != null ? rs.getInt("location_id") : null);
                 carList.add(car);
             }
 
@@ -301,6 +326,7 @@ public class CarDao {
                 car.setPassengers(rs.getInt("passengers"));
                 car.setGearbox(rs.getString("gearbox"));
                 car.setFeatures(rs.getString("features"));
+                car.setLocationId(rs.getObject("location_id") != null ? rs.getInt("location_id") : null);
                 carList.add(car);
             }
 
