@@ -6,6 +6,8 @@ import view.BrandPanel;
 import view.AdminDashboard;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,15 +23,53 @@ import java.util.List;
 public class BrandController {
 
     private final BrandDao brandDao;
+    private final BrandPanel view;
 
+    public BrandController(BrandPanel view) {
+        this.brandDao = new BrandDao();
+        this.view = view;
+        
+        // Initial load
+        loadBrandTable();
+        
+        // Wire listeners
+        this.view.getBtnAddBrand().addActionListener(new AddBrandListener());
+        this.view.getBtnUpdateBrand().addActionListener(new UpdateBrandListener());
+        this.view.getBtnDeleteBrand().addActionListener(new DeleteBrandListener());
+        this.view.getBtnBrowseLogo().addActionListener(new BrowseLogoListener());
+        this.view.getBtnRefreshBrand().addActionListener(new RefreshBrandListener());
+
+        // Wire list selection model selection listener to keep logic in Controller (strict MVC)
+        this.view.getBrandsTable().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = this.view.getBrandsTable().getSelectedRow();
+                if (selectedRow != -1) {
+                    try {
+                        int brandId = Integer.parseInt(this.view.getBrandsTable().getValueAt(selectedRow, 0).toString());
+                        Brand brand = brandDao.getBrandById(brandId);
+                        if (brand != null) {
+                            this.view.populateEditorFields(brand);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("[BrandController] Row selection mapping error: " + ex.getMessage());
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Helper default constructor for cross-controller updates.
+     */
     public BrandController() {
         this.brandDao = new BrandDao();
+        this.view = null;
     }
 
     /**
      * Fetches all brands and populates the view's Brands JTable.
      */
-    public void loadBrandTable(BrandPanel view) {
+    public void loadBrandTable() {
         if (view == null) return;
 
         List<Brand> brands = brandDao.getAllBrands();
@@ -45,158 +85,159 @@ public class BrandController {
         }
     }
 
-    /**
-     * Displays a JFileChooser to select a brand logo image.
-     */
-    public void handleBrowseLogo(BrandPanel view) {
-        if (view == null) return;
+    class BrowseLogoListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (view == null) return;
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Select Brand Logo Image");
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images (PNG, JPG, JPEG)", "png", "jpg", "jpeg"));
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select Brand Logo Image");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images (PNG, JPG, JPEG)", "png", "jpg", "jpeg"));
 
-        int result = fileChooser.showOpenDialog(view);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            view.setSelectedLogoFile(selectedFile);
-            view.showLogoPreview(selectedFile.getAbsolutePath());
-        }
-    }
-
-    /**
-     * Handles adding a brand, copying the chosen logo file into runtime build assets paths.
-     */
-    public boolean handleAddBrand(BrandPanel view) {
-        if (view == null) return false;
-
-        String name = view.getBrandNameInput().trim();
-        File selectedFile = view.getSelectedLogoFile();
-
-        if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please enter a Brand Name.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-
-        String logoPath = "/images/logos/default.png"; // Default fallback
-        if (selectedFile != null) {
-            logoPath = copyLogoToAssets(view, selectedFile);
-            if (logoPath == null) return false; // Error occurred while copying
-        }
-
-        Brand brand = new Brand(name, logoPath);
-        boolean success = brandDao.addBrand(brand);
-
-        if (success) {
-            JOptionPane.showMessageDialog(view, "Brand '" + name + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            view.clearBrandInputs();
-            loadBrandTable(view);
-            
-            // Dynamic update: reload the Brand dropdown in the Cars tab of AdminDashboard if embedded there!
-            java.awt.Window parent = SwingUtilities.getWindowAncestor(view);
-            if (parent instanceof AdminDashboard) {
-                new CarController().populateBrandCombo(((AdminDashboard) parent).getCarPanel());
+            int result = fileChooser.showOpenDialog(view);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                view.setSelectedLogoFile(selectedFile);
+                view.showLogoPreview(selectedFile.getAbsolutePath());
             }
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(view, "Failed to add brand. The name might already exist.", "Database Error", JOptionPane.ERROR_MESSAGE);
-            return false;
         }
     }
 
-    /**
-     * Handles updating an existing brand record.
-     */
-    public boolean handleUpdateBrand(BrandPanel view) {
-        if (view == null) return false;
+    class AddBrandListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (view == null) return;
 
-        int selectedRow = view.getBrandsTable().getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a brand from the table to update.", "Selection Required", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
+            String name = view.getBrandNameInput().trim();
+            File selectedFile = view.getSelectedLogoFile();
 
-        int id = Integer.parseInt(view.getBrandsTable().getValueAt(selectedRow, 0).toString());
-        String oldLogoPath = view.getBrandsTable().getValueAt(selectedRow, 2).toString();
-        String name = view.getBrandNameInput().trim();
-        File selectedFile = view.getSelectedLogoFile();
-
-        if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Brand Name cannot be empty.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-
-        String logoPath = oldLogoPath; // Maintain existing logo by default
-        if (selectedFile != null) {
-            logoPath = copyLogoToAssets(view, selectedFile);
-            if (logoPath == null) return false;
-        }
-
-        Brand brand = new Brand(id, name, logoPath);
-        boolean success = brandDao.updateBrand(brand);
-
-        if (success) {
-            JOptionPane.showMessageDialog(view, "Brand record updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            view.clearBrandInputs();
-            loadBrandTable(view);
-            
-            // Dynamic update: reload the Brand dropdown in the Cars tab of AdminDashboard if embedded there!
-            java.awt.Window parent = SwingUtilities.getWindowAncestor(view);
-            if (parent instanceof AdminDashboard) {
-                new CarController().populateBrandCombo(((AdminDashboard) parent).getCarPanel());
+            if (name.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "Please enter a Brand Name.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
             }
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(view, "Failed to update brand record.", "Database Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-    }
 
-    /**
-     * Handles deleting a brand.
-     */
-    public boolean handleDeleteBrand(BrandPanel view) {
-        if (view == null) return false;
+            String logoPath = "/images/logos/default.png"; // Default fallback
+            if (selectedFile != null) {
+                logoPath = copyLogoToAssets(selectedFile);
+                if (logoPath == null) return; // Error occurred while copying
+            }
 
-        int selectedRow = view.getBrandsTable().getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a brand to delete.", "Selection Required", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
+            Brand brand = new Brand(name, logoPath);
+            boolean success = brandDao.addBrand(brand);
 
-        int id = Integer.parseInt(view.getBrandsTable().getValueAt(selectedRow, 0).toString());
-        String name = view.getBrandsTable().getValueAt(selectedRow, 1).toString();
-
-        int confirm = JOptionPane.showConfirmDialog(view,
-            "Are you sure you want to delete the brand '" + name + "'?\nWARNING: This will delete all cars linked to this brand!",
-            "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = brandDao.deleteBrand(id);
             if (success) {
-                JOptionPane.showMessageDialog(view, "Brand removed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(view, "Brand '" + name + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 view.clearBrandInputs();
-                loadBrandTable(view);
+                loadBrandTable();
                 
-                // Sync updates in AdminDashboard if embedded there!
+                // Dynamic update: reload the Brand dropdown in the Cars tab of AdminDashboard if embedded there!
                 java.awt.Window parent = SwingUtilities.getWindowAncestor(view);
                 if (parent instanceof AdminDashboard) {
-                    AdminDashboard adminView = (AdminDashboard) parent;
-                    new CarController().populateBrandCombo(adminView.getCarPanel());
-                    new CarController().loadAdminCarTable(adminView.getCarPanel()); // Update car list in case some cars were deleted cascade
+                    new CarController().populateBrandCombo(((AdminDashboard) parent).getCarPanel());
                 }
-                return true;
             } else {
-                JOptionPane.showMessageDialog(view, "Failed to delete brand.", "Database Error", JOptionPane.ERROR_MESSAGE);
-                return false;
+                JOptionPane.showMessageDialog(view, "Failed to add brand. The name might already exist.", "Database Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-        return false;
+    }
+
+    class UpdateBrandListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (view == null) return;
+
+            int selectedRow = view.getBrandsTable().getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(view, "Please select a brand from the table to update.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int id = Integer.parseInt(view.getBrandsTable().getValueAt(selectedRow, 0).toString());
+            String oldLogoPath = view.getBrandsTable().getValueAt(selectedRow, 2).toString();
+            String name = view.getBrandNameInput().trim();
+            File selectedFile = view.getSelectedLogoFile();
+
+            if (name.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "Brand Name cannot be empty.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String logoPath = oldLogoPath; // Maintain existing logo by default
+            if (selectedFile != null) {
+                logoPath = copyLogoToAssets(selectedFile);
+                if (logoPath == null) return;
+            }
+
+            Brand brand = new Brand(id, name, logoPath);
+            boolean success = brandDao.updateBrand(brand);
+
+            if (success) {
+                JOptionPane.showMessageDialog(view, "Brand record updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                view.clearBrandInputs();
+                loadBrandTable();
+                
+                // Dynamic update: reload the Brand dropdown in the Cars tab of AdminDashboard if embedded there!
+                java.awt.Window parent = SwingUtilities.getWindowAncestor(view);
+                if (parent instanceof AdminDashboard) {
+                    new CarController().populateBrandCombo(((AdminDashboard) parent).getCarPanel());
+                }
+            } else {
+                JOptionPane.showMessageDialog(view, "Failed to update brand record.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    class DeleteBrandListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (view == null) return;
+
+            int selectedRow = view.getBrandsTable().getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(view, "Please select a brand to delete.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int id = Integer.parseInt(view.getBrandsTable().getValueAt(selectedRow, 0).toString());
+            String name = view.getBrandsTable().getValueAt(selectedRow, 1).toString();
+
+            int confirm = JOptionPane.showConfirmDialog(view,
+                "Are you sure you want to delete the brand '" + name + "'?\nWARNING: This will delete all cars linked to this brand!",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean success = brandDao.deleteBrand(id);
+                if (success) {
+                    JOptionPane.showMessageDialog(view, "Brand removed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    view.clearBrandInputs();
+                    loadBrandTable();
+                    
+                    // Sync updates in AdminDashboard if embedded there!
+                    java.awt.Window parent = SwingUtilities.getWindowAncestor(view);
+                    if (parent instanceof AdminDashboard) {
+                        AdminDashboard adminView = (AdminDashboard) parent;
+                        new CarController().populateBrandCombo(adminView.getCarPanel());
+                        new CarController().loadAdminCarTable(adminView.getCarPanel()); // Update car list in case some cars were deleted cascade
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(view, "Failed to delete brand.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    class RefreshBrandListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            loadBrandTable();
+            view.clearBrandInputs();
+        }
     }
 
     /**
      * Copy selected logo file to local source assets and build folders at runtime.
      */
-    private String copyLogoToAssets(BrandPanel view, File selectedFile) {
+    private String copyLogoToAssets(File selectedFile) {
         String relativePath = "/images/logos/" + selectedFile.getName();
         
         // 1. Copy to source folder (src/images/logos/)
