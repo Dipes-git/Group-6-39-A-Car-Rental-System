@@ -139,7 +139,20 @@ public class CarPanel extends javax.swing.JPanel {
             }
         });
 
-        btnAddCarImages.addActionListener(evt -> cardLayout.show(cardPanel, "images"));
+        btnAddCarImages.addActionListener(evt -> {
+            String activeCard = getActiveCardName();
+            if ("images".equals(activeCard)) {
+                uploadCarImage();
+            } else {
+                int selectedRow = carTable.getSelectedRow();
+                if (selectedRow == -1) {
+                    javax.swing.JOptionPane.showMessageDialog(this, "Please select a car from the table first.", "Selection Required", javax.swing.JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                cardLayout.show(cardPanel, "images");
+                updateImagePanelForSelectedCar();
+            }
+        });
         btnBrandsList.addActionListener(evt -> {
             if (onBrandsTabRedirectCallback != null) {
                 onBrandsTabRedirectCallback.run();
@@ -149,6 +162,15 @@ public class CarPanel extends javax.swing.JPanel {
         // Inner Card navigation buttons
         btnBackToForm.addActionListener(evt -> cardLayout.show(cardPanel, "form"));
         btnBackToFormImages.addActionListener(evt -> cardLayout.show(cardPanel, "form"));
+
+        // Setup mouse listener for the visual loader placeholder area
+        imagesUploadLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                uploadCarImage();
+            }
+        });
+        imagesUploadLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
     }
 
     // --- Inputs Getters/Setters for controllers ---
@@ -293,6 +315,26 @@ public class CarPanel extends javax.swing.JPanel {
     // --- Inputs Getters/Setters for controllers ---
     public JTable getCarTable() {
         return carTable;
+    }
+
+    public javax.swing.JComboBox<String> getCbFilterGearbox() {
+        return cbFilterGearbox;
+    }
+
+    public javax.swing.JComboBox<String> getCbFilterFuel() {
+        return cbFilterFuel;
+    }
+
+    public javax.swing.JTextField getTxtFilterPrice() {
+        return txtFilterPrice;
+    }
+
+    public javax.swing.JButton getBtnFilterSearch() {
+        return btnFilterSearch;
+    }
+
+    public javax.swing.JTable getReviewsTable() {
+        return reviewsTable;
     }
 
     public JComboBox<Brand> getBrandCombo() {
@@ -663,7 +705,87 @@ public class CarPanel extends javax.swing.JPanel {
         carsScrollPane.setViewportView(carTable);
 
         listPanel.add(carsScrollPane);
-        carsScrollPane.setBounds(30, 20, 540, 310);
+        carsScrollPane.setBounds(30, 55, 540, 160);
+
+        lblFilterGearbox = new javax.swing.JLabel("Gearbox:");
+        lblFilterGearbox.setFont(new java.awt.Font("Segoe UI", 1, 12));
+        lblFilterGearbox.setForeground(java.awt.Color.WHITE);
+        listPanel.add(lblFilterGearbox);
+        lblFilterGearbox.setBounds(30, 15, 60, 25);
+
+        cbFilterGearbox = new javax.swing.JComboBox<>(new String[] { "All", "Automatic", "Manual" });
+        cbFilterGearbox.setBackground(new java.awt.Color(50, 50, 50));
+        cbFilterGearbox.setForeground(java.awt.Color.WHITE);
+        listPanel.add(cbFilterGearbox);
+        cbFilterGearbox.setBounds(95, 15, 90, 25);
+
+        lblFilterFuel = new javax.swing.JLabel("Fuel:");
+        lblFilterFuel.setFont(new java.awt.Font("Segoe UI", 1, 12));
+        lblFilterFuel.setForeground(java.awt.Color.WHITE);
+        listPanel.add(lblFilterFuel);
+        lblFilterFuel.setBounds(200, 15, 40, 25);
+
+        cbFilterFuel = new javax.swing.JComboBox<>(new String[] { "All", "Gas", "Diesel", "Electric", "Hybrid" });
+        cbFilterFuel.setBackground(new java.awt.Color(50, 50, 50));
+        cbFilterFuel.setForeground(java.awt.Color.WHITE);
+        listPanel.add(cbFilterFuel);
+        cbFilterFuel.setBounds(240, 15, 90, 25);
+
+        lblFilterPrice = new javax.swing.JLabel("Max Price:");
+        lblFilterPrice.setFont(new java.awt.Font("Segoe UI", 1, 12));
+        lblFilterPrice.setForeground(java.awt.Color.WHITE);
+        listPanel.add(lblFilterPrice);
+        lblFilterPrice.setBounds(345, 15, 70, 25);
+
+        txtFilterPrice = new javax.swing.JTextField();
+        txtFilterPrice.setBackground(new java.awt.Color(50, 50, 50));
+        txtFilterPrice.setForeground(java.awt.Color.WHITE);
+        txtFilterPrice.setCaretColor(java.awt.Color.WHITE);
+        listPanel.add(txtFilterPrice);
+        txtFilterPrice.setBounds(415, 15, 70, 25);
+
+        btnFilterSearch = new javax.swing.JButton("Filter");
+        btnFilterSearch.setBackground(new java.awt.Color(41, 128, 185));
+        btnFilterSearch.setFont(new java.awt.Font("Segoe UI", 1, 12));
+        btnFilterSearch.setForeground(java.awt.Color.WHITE);
+        listPanel.add(btnFilterSearch);
+        btnFilterSearch.setBounds(495, 15, 75, 25);
+
+        lblReviewsTitle = new javax.swing.JLabel("Customer Reviews & Ratings");
+        lblReviewsTitle.setFont(new java.awt.Font("Segoe UI", 1, 14));
+        lblReviewsTitle.setForeground(new java.awt.Color(51, 204, 255));
+        listPanel.add(lblReviewsTitle);
+        lblReviewsTitle.setBounds(30, 225, 250, 20);
+
+        reviewsTable = new javax.swing.JTable();
+        reviewsTable.setBackground(new java.awt.Color(50, 50, 50));
+        reviewsTable.setForeground(java.awt.Color.WHITE);
+        reviewsTable.setGridColor(new java.awt.Color(70, 70, 70));
+        reviewsTable.setRowHeight(22);
+        reviewsTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {},
+            new String [] {
+                "User", "Rating", "Comment", "Date"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+
+        reviewsScrollPane = new javax.swing.JScrollPane();
+        reviewsScrollPane.setViewportView(reviewsTable);
+        listPanel.add(reviewsScrollPane);
+        reviewsScrollPane.setBounds(30, 250, 540, 85);
 
         btnBackToForm.setBackground(new java.awt.Color(142, 68, 173));
         btnBackToForm.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
@@ -740,6 +862,82 @@ public class CarPanel extends javax.swing.JPanel {
         carsBgLabel.setBounds(0, 0, 600, 520);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void uploadCarImage() {
+        int selectedRow = carTable.getSelectedRow();
+        if (selectedRow == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Please select a car first.", "Selection Required", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        int carId = Integer.parseInt(carTable.getValueAt(selectedRow, 0).toString());
+        
+        javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
+        fileChooser.setDialogTitle("Select Car Image");
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg"));
+        
+        int result = fileChooser.showOpenDialog(this);
+        if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
+            java.io.File selectedFile = fileChooser.getSelectedFile();
+            try {
+                java.io.File destDir = new java.io.File("src/images");
+                if (!destDir.exists()) {
+                    destDir.mkdirs();
+                }
+                
+                java.io.File destFile = new java.io.File(destDir, "car_" + carId + ".png");
+                java.nio.file.Files.copy(selectedFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                
+                java.io.File buildDir = new java.io.File("build/classes/images");
+                if (buildDir.exists()) {
+                    java.io.File buildDestFile = new java.io.File(buildDir, "car_" + carId + ".png");
+                    java.nio.file.Files.copy(selectedFile.toPath(), buildDestFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                
+                displayCarImage(destFile);
+                javax.swing.JOptionPane.showMessageDialog(this, "Image uploaded successfully!", "Success", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                
+            } catch (Exception e) {
+                System.err.println("[CarPanel] Failed to save uploaded image: " + e.getMessage());
+                javax.swing.JOptionPane.showMessageDialog(this, "Failed to save image: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void displayCarImage(java.io.File file) {
+        try {
+            javax.swing.ImageIcon icon = new javax.swing.ImageIcon(file.getAbsolutePath());
+            java.awt.Image img = icon.getImage();
+            
+            int labelWidth = imagesUploadLabel.getWidth();
+            int labelHeight = imagesUploadLabel.getHeight();
+            if (labelWidth <= 0) labelWidth = 540;
+            if (labelHeight <= 0) labelHeight = 260;
+            
+            java.awt.Image scaledImg = img.getScaledInstance(labelWidth, labelHeight, java.awt.Image.SCALE_SMOOTH);
+            imagesUploadLabel.setIcon(new javax.swing.ImageIcon(scaledImg));
+            imagesUploadLabel.setText("");
+        } catch (Exception e) {
+            System.err.println("[CarPanel] Failed to display image: " + e.getMessage());
+        }
+    }
+
+    private void updateImagePanelForSelectedCar() {
+        int selectedRow = carTable.getSelectedRow();
+        if (selectedRow == -1) return;
+        
+        int carId = Integer.parseInt(carTable.getValueAt(selectedRow, 0).toString());
+        String carModel = carTable.getValueAt(selectedRow, 2).toString();
+        imagesTitle.setText("Car Visual Loader - ID #" + carId + " (" + carModel + ")");
+        
+        java.io.File imgFile = new java.io.File("src/images/car_" + carId + ".png");
+        if (imgFile.exists()) {
+            displayCarImage(imgFile);
+        } else {
+            imagesUploadLabel.setIcon(null);
+            imagesUploadLabel.setText("No image uploaded for this car. Click here or use 'Add Car Images' to upload.");
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottomPanel;
     private javax.swing.JComboBox<model.Brand> brandCombo;
@@ -796,5 +994,15 @@ public class CarPanel extends javax.swing.JPanel {
     private javax.swing.JRadioButton rbManual;
     private javax.swing.JComboBox<String> statusCombo;
     private javax.swing.JLabel statusLabel;
+    private javax.swing.JComboBox<String> cbFilterFuel;
+    private javax.swing.JComboBox<String> cbFilterGearbox;
+    private javax.swing.JButton btnFilterSearch;
+    private javax.swing.JLabel lblFilterFuel;
+    private javax.swing.JLabel lblFilterGearbox;
+    private javax.swing.JLabel lblFilterPrice;
+    private javax.swing.JLabel lblReviewsTitle;
+    private javax.swing.JScrollPane reviewsScrollPane;
+    private javax.swing.JTable reviewsTable;
+    private javax.swing.JTextField txtFilterPrice;
     // End of variables declaration//GEN-END:variables
 }
