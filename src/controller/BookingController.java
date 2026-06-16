@@ -75,6 +75,27 @@ public class BookingController {
         // Bind listener for edit/cancel
         bookingPanel.getBtnEditCancel().addActionListener(new EditCancelBookingListener(false));
 
+        // Bind listener for Invoice Dialog
+        bookingPanel.getBtnInvoice().addActionListener(e -> {
+            openInvoiceDialog(userDashboard, false);
+        });
+
+
+        // Toggles btnRate based on table row selection
+        userBookingsTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = userBookingsTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    Object statusVal = userBookingsTable.getValueAt(selectedRow, 8);
+                    String status = statusVal != null ? statusVal.toString() : "";
+                    bookingPanel.getBtnRate().setEnabled("Completed".equalsIgnoreCase(status));
+                } else {
+                    bookingPanel.getBtnRate().setEnabled(false);
+                }
+            }
+        });
+        bookingPanel.getBtnRate().setEnabled(false);
+
         loadUserBookingsTable();
         refreshUserDashboardMetrics();
     }
@@ -101,6 +122,11 @@ public class BookingController {
 
         // Bind listener for edit/cancel
         bookingPanel.getBtnEditCancel().addActionListener(new EditCancelBookingListener(true));
+
+        // Bind listener for Invoice Dialog
+        bookingPanel.getBtnInvoice().addActionListener(e -> {
+            openInvoiceDialog(adminDashboard, true);
+        });
 
         loadAdminBookingsTable();
         refreshAdminDashboardMetrics();
@@ -849,7 +875,144 @@ public class BookingController {
         selectDialog.setVisible(true);
     }
 
+    private void openInvoiceDialog(JFrame parent, boolean isAdmin) {
+        JTable table = isAdmin ? adminBookingsTable : userBookingsTable;
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(parent, "Please select a booking to view its invoice.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int bookingId = (Integer) table.getValueAt(selectedRow, 0);
+        Booking booking = bookingDao.getBookingById(bookingId);
+        if (booking == null) {
+            JOptionPane.showMessageDialog(parent, "Booking not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        view.InvoiceDialog dialog = new view.InvoiceDialog(parent, booking);
+        dialog.getBtnExportHtml().addActionListener(e -> {
+            exportInvoiceToHtml(dialog, booking);
+        });
+        dialog.getBtnClose().addActionListener(e -> dialog.dispose());
+        dialog.setVisible(true);
+    }
+
+    /*
+    private void openReviewDialog(JFrame parent) {
+        int selectedRow = userBookingsTable.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(parent, "Please select a booking to rate.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int bookingId = (Integer) userBookingsTable.getValueAt(selectedRow, 0);
+        Booking booking = bookingDao.getBookingById(bookingId);
+        if (booking == null) {
+            JOptionPane.showMessageDialog(parent, "Booking not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!"Completed".equalsIgnoreCase(booking.getStatus())) {
+            JOptionPane.showMessageDialog(parent, "Only completed bookings can be rated.", "Invalid Action", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        dao.ReviewDao reviewDao = new dao.ReviewDao();
+        if (reviewDao.hasUserReviewed(bookingId)) {
+            JOptionPane.showMessageDialog(parent, "You have already submitted a review for this booking.", "Already Reviewed", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        view.ReviewDialog dialog = new view.ReviewDialog(parent, booking);
+        dialog.getBtnSubmit().addActionListener(e -> {
+            int rating = (Integer) dialog.getCbRating().getSelectedItem();
+            String comment = dialog.getTaComment().getText().trim();
+            if (comment.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please write a comment.", "Input Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            model.Review review = new model.Review(bookingId, booking.getUserId(), booking.getCarId(), rating, comment);
+            boolean success = reviewDao.addReview(review);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Thank you for your feedback!", "Review Submitted", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to submit review.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        dialog.getBtnCancel().addActionListener(e -> dialog.dispose());
+        dialog.setVisible(true);
+    }
+
+    */
+
     private void exportInvoiceToHtml(javax.swing.JDialog parent, Booking booking) {
-        // HTML export logic helper
+        try {
+            java.io.File dir = new java.io.File("invoices");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            java.io.File file = new java.io.File(dir, "Invoice_" + booking.getId() + ".html");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html>\n<html>\n<head>\n");
+            html.append("<title>Invoice #" + booking.getId() + "</title>\n");
+            html.append("<style>\n");
+            html.append("  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1e1e1e; color: #ffffff; padding: 40px; margin: 0; }\n");
+            html.append("  .invoice-card { background: #2d2d2d; max-width: 600px; margin: 0 auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); padding: 40px; border: 1px solid #404040; }\n");
+            html.append("  .header { text-align: center; margin-bottom: 30px; }\n");
+            html.append("  .header h1 { margin: 0; font-size: 28px; color: #33ccff; letter-spacing: 1px; }\n");
+            html.append("  .header p { margin: 5px 0 0 0; color: #a0a0a0; font-size: 14px; }\n");
+            html.append("  .separator { height: 2px; background: #404040; margin: 20px 0; }\n");
+            html.append("  .details-table { width: 100%; border-collapse: collapse; margin-top: 10px; }\n");
+            html.append("  .details-table td { padding: 12px 6px; font-size: 15px; border-bottom: 1px solid #3d3d3d; }\n");
+            html.append("  .details-table td.label { font-weight: bold; color: #b0b0b0; width: 40%; }\n");
+            html.append("  .details-table td.value { color: #ffffff; width: 60%; }\n");
+            html.append("  .price-container { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; background: #242424; padding: 20px; border-radius: 8px; border: 1px solid #33ccff; }\n");
+            html.append("  .price-label { font-size: 18px; font-weight: bold; color: #b0b0b0; }\n");
+            html.append("  .price-value { font-size: 26px; font-weight: bold; color: #2ecc71; }\n");
+            html.append("  .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #707070; }\n");
+            html.append("</style>\n</head>\n<body>\n");
+
+            html.append("<div class='invoice-card'>\n");
+            html.append("  <div class='header'>\n");
+            html.append("    <h1>RENTAL INVOICE</h1>\n");
+            html.append("    <p>Group-6-39-A Car Rental System</p>\n");
+            html.append("  </div>\n");
+            html.append("  <div class='separator'></div>\n");
+
+            html.append("  <table class='details-table'>\n");
+            html.append("    <tr><td class='label'>Booking ID:</td><td class='value'>#" + booking.getId() + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Customer Name:</td><td class='value'>" + (booking.getUsername() != null ? booking.getUsername() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Vehicle Details:</td><td class='value'>" + (booking.getCarDetails() != null ? booking.getCarDetails() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Pickup Location:</td><td class='value'>" + (booking.getPickupLocationName() != null ? booking.getPickupLocationName() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Return Location:</td><td class='value'>" + (booking.getReturnLocationName() != null ? booking.getReturnLocationName() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Start Date:</td><td class='value'>" + (booking.getStartDate() != null ? booking.getStartDate().toString() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>End Date:</td><td class='value'>" + (booking.getEndDate() != null ? booking.getEndDate().toString() : "N/A") + "</td></tr>\n");
+            html.append("    <tr><td class='label'>Booking Status:</td><td class='value'>" + (booking.getStatus() != null ? booking.getStatus() : "Pending") + "</td></tr>\n");
+            html.append("  </table>\n");
+
+            html.append("  <div class='price-container'>\n");
+            html.append("    <div class='price-label'>Total Amount Paid:</div>\n");
+            html.append("    <div class='price-value'>$" + String.format("%.2f", booking.getTotalPrice()) + "</div>\n");
+            html.append("  </div>\n");
+
+            html.append("  <div class='footer'>\n");
+            html.append("    <p>Thank you for choosing Group-6-39-A Car Rental System!</p>\n");
+            html.append("    <p>Generated on " + new java.util.Date().toString() + "</p>\n");
+            html.append("  </div>\n");
+            html.append("</div>\n");
+
+            html.append("</body>\n</html>");
+
+            java.nio.file.Files.write(file.toPath(), html.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            JOptionPane.showMessageDialog(parent, "Invoice successfully saved to:\n" + file.getAbsolutePath(), "Invoice Exported", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            System.err.println("[BookingController] Error exporting invoice: " + e.getMessage());
+            JOptionPane.showMessageDialog(parent, "Failed to export invoice: " + e.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
