@@ -62,7 +62,6 @@ public class ReviewDao {
         }
     }
 
-    /*
     public List<Review> getReviewsByCarId(int carId) {
         List<Review> reviews = new ArrayList<>();
         String query = "SELECT r.*, u.username FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.car_id = ? ORDER BY r.created_at DESC";
@@ -118,8 +117,6 @@ public class ReviewDao {
         }
         return 0.0;
     }
-
-    */
 
     private void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
         try {
