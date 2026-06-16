@@ -128,5 +128,27 @@ SELECT * FROM brands;
 SELECT * FROM cars;
 SELECT * FROM bookings;
 
+-- 7. Create reviews table (Sprint 5: Invoicing, Reviews & Ratings)
+CREATE TABLE IF NOT EXISTS reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    user_id INT NOT NULL,
+    car_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE
+);
+
+-- 8. Verify the setups
+SELECT * FROM users;
+SELECT * FROM locations;
+SELECT * FROM brands;
+SELECT * FROM cars;
+SELECT * FROM bookings;
+SELECT * FROM reviews;
+
 show variables like 'autocommit';
 
