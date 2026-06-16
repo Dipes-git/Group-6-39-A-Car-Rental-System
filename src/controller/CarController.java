@@ -60,7 +60,7 @@ public class CarController {
                         int carId = Integer.parseInt(this.view.getCarTable().getValueAt(selectedRow, 0).toString());
                         Car car = getCarById(carId);
                         if (car != null) {
-                            
+                            loadCarReviews(carId);
                             if (this.view.isAdminMode()) {
                                 this.view.populateEditorFields(car);
                                 // Flip card back to form for direct editing in admin mode
@@ -413,7 +413,6 @@ public class CarController {
         }
     }
 
-    /*
     public void loadCarReviews(int carId) {
         if (view == null) return;
         
@@ -432,5 +431,4 @@ public class CarController {
             });
         }
     }
-    */
 }
