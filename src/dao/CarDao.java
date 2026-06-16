@@ -339,6 +339,71 @@ public class CarDao {
         return carList;
     }
 
+    /**
+     * Fetches cars filtered by Gearbox, Fuel, and Max Price.
+     */
+    public List<Car> getFilteredCars(String gearbox, String fuel, double maxPrice) {
+        List<Car> carList = new ArrayList<>();
+        StringBuilder query = new StringBuilder("SELECT c.*, b.name AS brand_name FROM cars c INNER JOIN brands b ON c.brand_id = b.id WHERE c.status = 'Available'");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (gearbox != null && !"All".equalsIgnoreCase(gearbox)) {
+            query.append(" AND c.gearbox = ?");
+            params.add(gearbox);
+        }
+        
+        if (fuel != null && !"All".equalsIgnoreCase(fuel)) {
+            query.append(" AND c.fuel = ?");
+            params.add(fuel);
+        }
+        
+        if (maxPrice >= 0) {
+            query.append(" AND c.price_per_day <= ?");
+            params.add(maxPrice);
+        }
+        
+        query.append(" ORDER BY c.id ASC");
+        
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = connector.openConnection();
+            if (conn == null) return carList;
+            
+            stmt = conn.prepareStatement(query.toString());
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Car car = new Car();
+                car.setId(rs.getInt("id"));
+                car.setBrandId(rs.getInt("brand_id"));
+                car.setBrand(rs.getString("brand_name"));
+                car.setModel(rs.getString("model"));
+                car.setCategory(rs.getString("category"));
+                car.setPricePerDay(rs.getDouble("price_per_day"));
+                car.setStatus(rs.getString("status"));
+                car.setFuel(rs.getString("fuel"));
+                car.setColor(rs.getString("color"));
+                car.setPassengers(rs.getInt("passengers"));
+                car.setGearbox(rs.getString("gearbox"));
+                car.setFeatures(rs.getString("features"));
+                car.setLocationId(rs.getObject("location_id") != null ? rs.getInt("location_id") : null);
+                carList.add(car);
+            }
+        } catch (SQLException e) {
+            System.err.println("[CarDao] Error filtering cars: " + e.getMessage());
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+        return carList;
+    }
+
     private void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
         try {
             if (rs != null) {
