@@ -111,7 +111,7 @@ public class BookingPanel extends JPanel {
         btnRefresh = new javax.swing.JButton();
         btnEditCancel = new javax.swing.JButton();
         btnInvoice = new javax.swing.JButton();
-        
+        btnRate = new javax.swing.JButton();
         bgLabel = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(45, 45, 45));
@@ -210,6 +210,12 @@ public class BookingPanel extends JPanel {
         add(btnInvoice);
         btnInvoice.setBounds(30, 440, 150, 35);
 
+        btnRate.setBackground(new java.awt.Color(243, 156, 18));
+        btnRate.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnRate.setForeground(new java.awt.Color(255, 255, 255));
+        btnRate.setText("Rate Rental");
+        add(btnRate);
+        btnRate.setBounds(200, 440, 150, 35);
 
         bgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admin_bg.png"))); // NOI18N
         add(bgLabel);
@@ -245,6 +251,9 @@ public class BookingPanel extends JPanel {
         return btnInvoice;
     }
 
+    public JButton getBtnRate() {
+        return btnRate;
+    }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel bgLabel;
@@ -253,6 +262,7 @@ public class BookingPanel extends JPanel {
     private javax.swing.JButton btnApprove;
     private javax.swing.JButton btnEditCancel;
     private javax.swing.JButton btnInvoice;
+    private javax.swing.JButton btnRate;
     private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnReject;
     private javax.swing.JButton btnReturn;
