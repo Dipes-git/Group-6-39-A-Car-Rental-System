@@ -46,6 +46,11 @@ public class CarController {
         this.view.getBtnRent().addActionListener(new RentCarListener());
         this.view.getBtnCarsList().addActionListener(new CarsListListener());
 
+        // Wire catalog filters search button
+        this.view.getBtnFilterSearch().addActionListener(e -> {
+            applyCarFilters();
+        });
+
         // Wire list selection model selection listener
         this.view.getCarTable().getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -55,9 +60,12 @@ public class CarController {
                         int carId = Integer.parseInt(this.view.getCarTable().getValueAt(selectedRow, 0).toString());
                         Car car = getCarById(carId);
                         if (car != null) {
-                            this.view.populateEditorFields(car);
-                            // Flip card back to form for direct editing
-                            this.view.getCardLayout().show(this.view.getCardPanel(), "form");
+                            
+                            if (this.view.isAdminMode()) {
+                                this.view.populateEditorFields(car);
+                                // Flip card back to form for direct editing in admin mode
+                                this.view.getCardLayout().show(this.view.getCardPanel(), "form");
+                            }
                         }
                     } catch (Exception ex) {
                         System.err.println("[CarPanel] Row selection mapping error: " + ex.getMessage());
@@ -371,4 +379,58 @@ public class CarController {
             loadAdminCarTable(view);
         }
     }
+
+    private void applyCarFilters() {
+        if (view == null) return;
+        
+        String gearbox = view.getCbFilterGearbox().getSelectedItem().toString();
+        String fuel = view.getCbFilterFuel().getSelectedItem().toString();
+        String priceText = view.getTxtFilterPrice().getText().trim();
+        
+        double maxPrice = -1;
+        if (!priceText.isEmpty()) {
+            try {
+                maxPrice = Double.parseDouble(priceText);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(view, "Please enter a valid number for max price.", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+        
+        DefaultTableModel model = (DefaultTableModel) view.getCarTable().getModel();
+        model.setRowCount(0);
+        
+        List<Car> filteredCars = carDao.getFilteredCars(gearbox, fuel, maxPrice);
+        for (Car car : filteredCars) {
+            model.addRow(new Object[]{
+                car.getId(),
+                car.getBrand(),
+                car.getModel(),
+                car.getCategory(),
+                String.format("$%.2f", car.getPricePerDay()),
+                car.getStatus()
+            });
+        }
+    }
+
+    /*
+    public void loadCarReviews(int carId) {
+        if (view == null) return;
+        
+        dao.ReviewDao reviewDao = new dao.ReviewDao();
+        List<model.Review> reviews = reviewDao.getReviewsByCarId(carId);
+        
+        DefaultTableModel model = (DefaultTableModel) view.getReviewsTable().getModel();
+        model.setRowCount(0);
+        
+        for (model.Review r : reviews) {
+            model.addRow(new Object[]{
+                r.getUsername(),
+                r.getRating() + " / 5",
+                r.getComment(),
+                r.getCreatedAt() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(r.getCreatedAt()) : "N/A"
+            });
+        }
+    }
+    */
 }
