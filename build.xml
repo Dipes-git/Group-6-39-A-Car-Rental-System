@@ -81,4 +81,5 @@
         <echo message="Standalone executable JAR successfully built!"/>
     </target>
 <!-- Packaging verified -->
+<!-- Packaging verified -->
 </project>
