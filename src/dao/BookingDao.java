@@ -60,6 +60,28 @@ public class BookingDao {
                         }
                     }
                 }
+                
+                try (ResultSet rs = meta.getTables(null, null, "reviews", null)) {
+                    if (!rs.next()) {
+                        System.out.println("[BookingDao] Reviews table not found. Building schema natively...");
+                        String createReviewsSQL = "CREATE TABLE reviews ("
+                                + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                                + "booking_id INT NOT NULL,"
+                                + "user_id INT NOT NULL,"
+                                + "car_id INT NOT NULL,"
+                                + "rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),"
+                                + "comment TEXT,"
+                                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                                + "FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,"
+                                + "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,"
+                                + "FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE"
+                                + ")";
+                        try (Statement stmt = conn.createStatement()) {
+                            stmt.executeUpdate(createReviewsSQL);
+                            System.out.println("[BookingDao] Table 'reviews' successfully created.");
+                        }
+                    }
+                }
             }
         } catch (SQLException e) {
             System.err.println("[BookingDao] Error during self-healing initialization: " + e.getMessage());
