@@ -61,12 +61,22 @@ public class BookingPanel extends JPanel {
             btnEditCancel.setText("Edit / Cancel");
             btnRefresh.setBounds(500, 390, 80, 35);
             btnRefresh.setText("Refresh");
+            btnInvoice.setBounds(30, 440, 150, 35);
+            btnInvoice.setText("View Invoice");
+            btnInvoice.setVisible(true);
+            btnRate.setVisible(false);
         } else {
             // In user mode, align nicely
             btnRefresh.setBounds(30, 390, 260, 35);
             btnRefresh.setText("Refresh History");
             btnEditCancel.setBounds(310, 390, 260, 35);
             btnEditCancel.setText("Edit / Cancel Booking");
+            btnInvoice.setBounds(30, 440, 260, 35);
+            btnInvoice.setText("View Invoice");
+            btnInvoice.setVisible(true);
+            btnRate.setBounds(310, 440, 260, 35);
+            btnRate.setText("Rate Rental");
+            btnRate.setVisible(true);
         }
         
         // Adjust JTable Columns visibility or headers if needed
@@ -100,6 +110,8 @@ public class BookingPanel extends JPanel {
         btnReturn = new javax.swing.JButton();
         btnRefresh = new javax.swing.JButton();
         btnEditCancel = new javax.swing.JButton();
+        btnInvoice = new javax.swing.JButton();
+        
         bgLabel = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(45, 45, 45));
@@ -191,6 +203,14 @@ public class BookingPanel extends JPanel {
         add(btnEditCancel);
         btnEditCancel.setBounds(250, 390, 160, 35);
 
+        btnInvoice.setBackground(new java.awt.Color(0, 120, 150));
+        btnInvoice.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnInvoice.setForeground(new java.awt.Color(255, 255, 255));
+        btnInvoice.setText("View Invoice");
+        add(btnInvoice);
+        btnInvoice.setBounds(30, 440, 150, 35);
+
+
         bgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admin_bg.png"))); // NOI18N
         add(bgLabel);
         bgLabel.setBounds(0, 0, 600, 520);
@@ -221,12 +241,18 @@ public class BookingPanel extends JPanel {
         return btnEditCancel;
     }
     
+    public JButton getBtnInvoice() {
+        return btnInvoice;
+    }
+
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel bgLabel;
     private javax.swing.JTable bookingsTable;
     private javax.swing.JLabel bookingsTitle;
     private javax.swing.JButton btnApprove;
     private javax.swing.JButton btnEditCancel;
+    private javax.swing.JButton btnInvoice;
     private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnReject;
     private javax.swing.JButton btnReturn;
