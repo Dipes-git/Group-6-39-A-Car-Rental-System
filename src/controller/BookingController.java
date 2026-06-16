@@ -80,6 +80,10 @@ public class BookingController {
             openInvoiceDialog(userDashboard, false);
         });
 
+        // Bind listener for Rating Dialog
+        bookingPanel.getBtnRate().addActionListener(e -> {
+            openReviewDialog(userDashboard);
+        });
 
         // Toggles btnRate based on table row selection
         userBookingsTable.getSelectionModel().addListSelectionListener(e -> {
@@ -898,7 +902,6 @@ public class BookingController {
         dialog.setVisible(true);
     }
 
-    /*
     private void openReviewDialog(JFrame parent) {
         int selectedRow = userBookingsTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -945,8 +948,6 @@ public class BookingController {
         dialog.getBtnCancel().addActionListener(e -> dialog.dispose());
         dialog.setVisible(true);
     }
-
-    */
 
     private void exportInvoiceToHtml(javax.swing.JDialog parent, Booking booking) {
         try {
