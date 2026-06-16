@@ -848,4 +848,8 @@ public class BookingController {
         selectDialog.setLocationRelativeTo(parent);
         selectDialog.setVisible(true);
     }
+
+    private void exportInvoiceToHtml(javax.swing.JDialog parent, Booking booking) {
+        // HTML export logic helper
+    }
 }
