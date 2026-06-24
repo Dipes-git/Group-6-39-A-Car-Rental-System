@@ -56,6 +56,25 @@ public class BookingDialog extends javax.swing.JDialog {
         valFuel.setText(car.getFuel());
         valYear.setText("2024"); // Default model mockup year
         
+        // Load custom car image if exists, fallback to default resource icon
+        try {
+            java.io.File imgFile = new java.io.File("src/images/car_" + car.getId() + ".png");
+            if (imgFile.exists()) {
+                javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgFile.getAbsolutePath());
+                java.awt.Image img = icon.getImage().getScaledInstance(250, 140, java.awt.Image.SCALE_SMOOTH);
+                carImageLabel.setIcon(new javax.swing.ImageIcon(img));
+            } else {
+                java.net.URL imgUrl = getClass().getResource("/images/maserati_suv.png");
+                if (imgUrl != null) {
+                    javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgUrl);
+                    java.awt.Image img = icon.getImage().getScaledInstance(250, 140, java.awt.Image.SCALE_SMOOTH);
+                    carImageLabel.setIcon(new javax.swing.ImageIcon(img));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[BookingDialog] Failed to load car image: " + e.getMessage());
+        }
+        
         setDefaultDates();
         calculatePricePreview();
         // Recalculate total price dynamically on focus loss
